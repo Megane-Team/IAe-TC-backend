@@ -6,7 +6,7 @@ import { logs } from "./logs.js"
 export const users = pgTable("users", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),
-    email: text().notNull(),
+    email: text().notNull().unique(),
     role: text().notNull(),
     division: text().notNull(),
     place: text().notNull(),
