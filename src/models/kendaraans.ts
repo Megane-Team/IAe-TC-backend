@@ -10,9 +10,9 @@ export const kendaraans = pgTable("kendaraans", {
     condition: text().notNull(),
     warranty: text().notNull(),
     category: text().notNull(),
-    coloer: text().notNull(),
+    color: text().notNull(),
     photo: text(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
 export const kendaraanSchema = {

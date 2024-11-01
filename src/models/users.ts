@@ -13,7 +13,7 @@ export const users = pgTable("users", {
     photo: text(),
     phone_number: text().notNull(),
     password: text().notNull(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
 export const userSchema = {

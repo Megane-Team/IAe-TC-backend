@@ -10,7 +10,7 @@ export const barangs = pgTable("barangs", {
     condition: text().notNull(),
     warranty: date().notNull(),
     photo: text(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
 export const barangSchema = {

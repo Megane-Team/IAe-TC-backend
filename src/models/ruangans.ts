@@ -7,11 +7,11 @@ export const ruangans = pgTable("ruangans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     code: text().notNull().unique(),
     status: text().notNull(),
-    capacity: integer().notNull(),
+    capacity: integer(),
     category: text().notNull(),
     photo: text(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
-    id_barang: integer().notNull().references(() => barangs.id)
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
+    barangId: integer().notNull().references(() => barangs.id)
 })
 
 export const ruanganSchema = {

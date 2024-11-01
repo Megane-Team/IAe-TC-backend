@@ -9,7 +9,7 @@ export const tempats = pgTable("tempats", {
     name: text().notNull().unique(),
     category: text().notNull(),
     photo: text(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
-    id_ruangan: integer().references(() => ruangans.id),
-    id_kendaraan: integer().references(() => kendaraans.id)
+    ruanganId: integer().references(() => ruangans.id),
+    kendaraanId: integer().references(() => kendaraans.id),
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })

@@ -3,11 +3,13 @@ import { serializerCompiler, validatorCompiler, ZodTypeProvider, jsonSchemaTrans
 import { readFileSync } from "fs";
 import { readdir } from "fs/promises";
 import { resolve } from "path";
-import { port, host, databaseUrl } from "./config.js";
+import { port, host, databaseUrl, secretToken } from "./config.js";
 import pg from "pg";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import status from "statuses";
+import fjwt, { FastifyJWT } from '@fastify/jwt'
+import fCookie from '@fastify/cookie'
 
 const server = fastify({
     logger: {
@@ -53,7 +55,22 @@ server.register(import("@scalar/fastify-api-reference"), {
         }
     }
 });
-server.register(import("@fastify/cookie"));
+
+// jwt
+server.register(fjwt, { secret: secretToken as any})
+
+server.addHook('preHandler', (req, res, next) => {
+  // here we are
+  req.jwt = server.jwt
+  return next()
+})
+
+// cookies
+server.register(fCookie, {
+  secret: secretToken,
+  hook: 'preHandler',
+})
+
 // TODO: Enable security headers
 // server.register(import("@fastify/helmet"));
 // server.register(import("@fastify/cors"));
@@ -86,6 +103,7 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
 
     return { ...newPayload, ...payload };
 });
+
 
 server.listen({ port: port, host: host })
     .catch((error) => {

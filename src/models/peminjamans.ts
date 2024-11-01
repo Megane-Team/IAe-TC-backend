@@ -12,14 +12,14 @@ export const peminjamans = pgTable("peminjamans", {
     category: text().notNull(),
     borrowedDate: timestamp({ withTimezone: true }).notNull(),
     estimatedTime: timestamp({ withTimezone: true }).notNull(),
-    returnDate: timestamp({ withTimezone: true }).notNull(),
+    returnDate: timestamp({ withTimezone: true }),
     objective: text().notNull(),
-    passenger: integer().notNull(),
-    created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
+    passenger: integer(),
     userId: integer().notNull().references(() => users.id),
-    ruanganId: integer().notNull().references(() => ruangans.id),
-    barangId: integer().notNull().references(() => barangs.id),
-    kendaraanId: integer().notNull().references(() => kendaraans.id)
+    ruanganId: integer().references(() => ruangans.id),
+    barangId: integer().references(() => barangs.id),
+    kendaraanId: integer().references(() => kendaraans.id),
+    createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
 export const peminjamanSchema = {

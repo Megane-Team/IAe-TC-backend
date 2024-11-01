@@ -1,5 +1,5 @@
 {
-  "id": "af74a80a-20aa-4c05-8f9a-825dce88a090",
+  "id": "02f0b2bb-d4d2-461f-a743-0386e797b3b0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -134,8 +134,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "coloer": {
-          "name": "coloer",
+        "color": {
+          "name": "color",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -282,7 +282,7 @@
           "name": "return_date",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "objective": {
           "name": "objective",
@@ -294,14 +294,7 @@
           "name": "passenger",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -313,19 +306,26 @@
           "name": "ruangan_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "barang_id": {
           "name": "barang_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "kendaraan_id": {
           "name": "kendaraan_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -426,7 +426,7 @@
           "name": "capacity",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "category": {
           "name": "category",
@@ -447,8 +447,8 @@
           "notNull": true,
           "default": "now()"
         },
-        "id_barang": {
-          "name": "id_barang",
+        "barang_id": {
+          "name": "barang_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -456,12 +456,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "ruangans_id_barang_barangs_id_fk": {
-          "name": "ruangans_id_barang_barangs_id_fk",
+        "ruangans_barang_id_barangs_id_fk": {
+          "name": "ruangans_barang_id_barangs_id_fk",
           "tableFrom": "ruangans",
           "tableTo": "barangs",
           "columnsFrom": [
-            "id_barang"
+            "barang_id"
           ],
           "columnsTo": [
             "id"
@@ -523,34 +523,34 @@
           "primaryKey": false,
           "notNull": false
         },
+        "ruangan_id": {
+          "name": "ruangan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kendaraan_id": {
+          "name": "kendaraan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "id_ruangan": {
-          "name": "id_ruangan",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id_kendaraan": {
-          "name": "id_kendaraan",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "tempats_id_ruangan_ruangans_id_fk": {
-          "name": "tempats_id_ruangan_ruangans_id_fk",
+        "tempats_ruangan_id_ruangans_id_fk": {
+          "name": "tempats_ruangan_id_ruangans_id_fk",
           "tableFrom": "tempats",
           "tableTo": "ruangans",
           "columnsFrom": [
-            "id_ruangan"
+            "ruangan_id"
           ],
           "columnsTo": [
             "id"
@@ -558,12 +558,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tempats_id_kendaraan_kendaraans_id_fk": {
-          "name": "tempats_id_kendaraan_kendaraans_id_fk",
+        "tempats_kendaraan_id_kendaraans_id_fk": {
+          "name": "tempats_kendaraan_id_kendaraans_id_fk",
           "tableFrom": "tempats",
           "tableTo": "kendaraans",
           "columnsFrom": [
-            "id_kendaraan"
+            "kendaraan_id"
           ],
           "columnsTo": [
             "id"
