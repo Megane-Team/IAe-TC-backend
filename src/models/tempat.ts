@@ -13,3 +13,8 @@ export const tempats = pgTable("tempats", {
     kendaraanId: integer().references(() => kendaraans.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
+
+export const tempatSchema = {
+    insert: createInsertSchema(tempats),
+    select: createSelectSchema(tempats)
+}
