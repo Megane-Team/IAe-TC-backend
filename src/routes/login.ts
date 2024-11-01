@@ -14,7 +14,7 @@ export const route = (instance: typeof server) => { instance
             tags: ["login"],
             body: z.object({
                 email: z.string(),
-                password: z.string()
+                password: z.string().min(8)
             }),
             response: {
                 // return token
@@ -27,9 +27,9 @@ export const route = (instance: typeof server) => { instance
     }, async (req) => {
         const { email, password } = req.body as { email: string; password: string };
 
-        const user = db.select().from(users);
+        const user = await db.select().from(users).where(eq(users.email, email)).execute();
 
-        console.log(user.toSQL())
+        console.log(user);
 
         if (user.length === 0) {
             return {
@@ -38,7 +38,14 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const token = req.jwt.sign({ id: user.id, email: user.email });
+        if (user[0].password !== password) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const token = req.jwt.sign({ id: user[0].id, name: user[0].name, email: user[0].email}); 
 
         return {
             statusCode: 200,

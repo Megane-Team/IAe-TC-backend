@@ -10,6 +10,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import status from "statuses";
 import fjwt, { FastifyJWT } from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
+import { db } from "./modules/database.ts";
+import { users } from "./models/users.ts";
 
 const server = fastify({
     logger: {
@@ -19,12 +21,35 @@ const server = fastify({
     }
 }).withTypeProvider<ZodTypeProvider>();
 
+async function checkAndInsertDefaultUser() {
+    const result = await db.select().from(users)
+
+    if (result.length === 0) {
+        await db.insert(users).values({
+            name: "Admin",
+            email: "myalghani@gmail.com",
+            role: "admin",
+            division: "admin",
+            place: "admin",
+            address: "admin",
+            phone_number: "admin",
+            photo: "admin",
+            password: "12345678",
+            createdAt: new Date(),
+        });
+        server.log.warn("Default user inserted");
+    }
+}
+
 try {
     server.log.warn("Migrating database...");
     const migrationClient = new pg.Client({ connectionString: databaseUrl });
     await migrationClient.connect();
     await migrate(drizzle(migrationClient, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
     server.log.warn("Database migrated successfully");
+
+    await checkAndInsertDefaultUser();
+
     await migrationClient.end();
 }
 catch (error) {
