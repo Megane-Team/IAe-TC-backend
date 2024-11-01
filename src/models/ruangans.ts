@@ -5,7 +5,7 @@ import { barangs } from "./barangs.js";
 
 export const ruangans = pgTable("ruangans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
-    code: text().notNull(),
+    code: text().notNull().unique(),
     status: text().notNull(),
     capacity: integer().notNull(),
     category: text().notNull(),
