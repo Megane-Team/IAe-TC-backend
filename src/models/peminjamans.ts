@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { users } from "./users.js";
-import { ruangans } from "./ruangans.js";
-import { barangs } from "./barangs.js";
-import { kendaraans } from "./kendaraans.js";
+import { users } from "./users.ts";
+import { ruangans } from "./ruangans.ts";
+import { barangs } from "./barangs.ts";
+import { kendaraans } from "./kendaraans.ts";
 
 export const peminjamans = pgTable("peminjamans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),

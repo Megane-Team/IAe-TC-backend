@@ -1,7 +1,6 @@
 import { relations, sql } from "drizzle-orm"
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
-import { logs } from "./logs.js"
 
 export const users = pgTable("users", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -16,11 +15,6 @@ export const users = pgTable("users", {
     password: text().notNull(),
     created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
-
-export const usersRelation = relations(users, ({ one }) => ({
-    logs: one(logs)
-}))
- 
 
 export const userSchema = {
     insert: createInsertSchema(users),

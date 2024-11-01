@@ -1,7 +1,7 @@
 import { relations, sql } from "drizzle-orm"
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
-import { users } from "./users.js"
+import { users } from "./users.ts"
 
 export const logs = pgTable("logs", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
