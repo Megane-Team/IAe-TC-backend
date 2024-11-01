@@ -9,7 +9,7 @@ export const barangs = pgTable("barangs", {
     status: text().notNull(),
     condition: text().notNull(),
     warranty: date().notNull(),
-    photo: text().notNull(),
+    photo: text(),
     created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 

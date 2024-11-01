@@ -11,7 +11,7 @@ export const users = pgTable("users", {
     division: text().notNull(),
     place: text().notNull(),
     address: text().notNull(), 
-    photo: text().notNull(),
+    photo: text(),
     phone_number: text().notNull(),
     password: text().notNull(),
     created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`)

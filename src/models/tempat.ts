@@ -8,7 +8,7 @@ export const tempats = pgTable("tempats", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull().unique(),
     category: text().notNull(),
-    photo: text().notNull(),
+    photo: text(),
     created_at: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
     id_ruangan: integer().references(() => ruangans.id),
     id_kendaraan: integer().references(() => kendaraans.id)
