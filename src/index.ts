@@ -32,7 +32,7 @@ async function checkAndInsertDefaultUser() {
             division: "admin",
             place: "admin",
             address: "admin",
-            phone_number: "admin",
+            phoneNumber: "admin",
             photo: "admin",
             password: "12345678",
             createdAt: new Date(),
