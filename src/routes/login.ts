@@ -5,10 +5,10 @@ import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-export const prefix = "/login";
+export const prefix = "/users";
 
 export const route = (instance: typeof server) => { instance
-    .post("", {
+    .post("/login", {
         schema: {
             description: "Login user",
             tags: ["login"],
