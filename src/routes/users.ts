@@ -70,7 +70,6 @@ export const route = (instance: typeof server) => { instance
                 address: z.string(),
                 password: z.string().min(8),
                 photo: z.string(),
-                createdAt: z.date(),
             }),
             response: {
                 200: genericResponse(200),
@@ -79,7 +78,7 @@ export const route = (instance: typeof server) => { instance
         }
     }, async (req) => {
 
-        const { name, email, password, role, division, place, phone_number, address, photo, createdAt } = req.body as { name: string; email: string; password: string; role: string; division: string; place: string; phone_number: string; address: string; photo: string; createdAt: Date };
+        const { name, email, password, role, division, place, phone_number, address, photo} = req.body as { name: string; email: string; password: string; role: string; division: string; place: string; phone_number: string; address: string; photo: string; createdAt: Date };
 
         const user = await db.select().from(users).where(eq(users.email, email)).execute();
 
