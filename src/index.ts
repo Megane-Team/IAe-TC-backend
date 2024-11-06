@@ -34,7 +34,7 @@ async function checkAndInsertDefaultUser() {
             address: "admin",
             phoneNumber: "admin",
             photo: "admin",
-            password: "12345678",
+            password: "$2a$10$ceefmQ/dcSGovOt0QGGLB.ZFfKzwm6BMJTShVJ9ofWjUNJAnvgYAW",
             createdAt: new Date(),
         });
         server.log.warn("Default user inserted");

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { barangs } from "./barangs.ts";
+import { tempats } from "./tempat.ts";
 
 export const ruangans = pgTable("ruangans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
@@ -11,7 +12,7 @@ export const ruangans = pgTable("ruangans", {
     category: text().notNull(),
     photo: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
-    barangId: integer().notNull().references(() => barangs.id)
+    tempatId: integer().notNull().references(() => tempats.id),
 })
 
 export const ruanganSchema = {

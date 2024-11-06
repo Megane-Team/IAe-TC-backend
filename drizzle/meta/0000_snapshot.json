@@ -1,5 +1,5 @@
 {
-  "id": "827d722e-d203-4c58-82c2-68503761793e",
+  "id": "184dbcb5-e00f-4b47-86d5-6d10e538d371",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -67,10 +67,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "ruangan_id": {
+          "name": "ruangan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "barangs_ruangan_id_ruangans_id_fk": {
+          "name": "barangs_ruangan_id_ruangans_id_fk",
+          "tableFrom": "barangs",
+          "tableTo": "ruangans",
+          "columnsFrom": [
+            "ruangan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -124,7 +144,13 @@
         },
         "warranty": {
           "name": "warranty",
-          "type": "text",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -152,10 +178,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "tempat_id": {
+          "name": "tempat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "kendaraans_tempat_id_tempats_id_fk": {
+          "name": "kendaraans_tempat_id_tempats_id_fk",
+          "tableFrom": "kendaraans",
+          "tableTo": "tempats",
+          "columnsFrom": [
+            "tempat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "kendaraans_plat_unique": {
@@ -447,8 +493,8 @@
           "notNull": true,
           "default": "now()"
         },
-        "barang_id": {
-          "name": "barang_id",
+        "tempat_id": {
+          "name": "tempat_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -456,12 +502,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "ruangans_barang_id_barangs_id_fk": {
-          "name": "ruangans_barang_id_barangs_id_fk",
+        "ruangans_tempat_id_tempats_id_fk": {
+          "name": "ruangans_tempat_id_tempats_id_fk",
           "tableFrom": "ruangans",
-          "tableTo": "barangs",
+          "tableTo": "tempats",
           "columnsFrom": [
-            "barang_id"
+            "tempat_id"
           ],
           "columnsTo": [
             "id"
@@ -523,18 +569,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "ruangan_id": {
-          "name": "ruangan_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "kendaraan_id": {
-          "name": "kendaraan_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -544,34 +578,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "tempats_ruangan_id_ruangans_id_fk": {
-          "name": "tempats_ruangan_id_ruangans_id_fk",
-          "tableFrom": "tempats",
-          "tableTo": "ruangans",
-          "columnsFrom": [
-            "ruangan_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "tempats_kendaraan_id_kendaraans_id_fk": {
-          "name": "tempats_kendaraan_id_kendaraans_id_fk",
-          "tableFrom": "tempats",
-          "tableTo": "kendaraans",
-          "columnsFrom": [
-            "kendaraan_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "tempats_name_unique": {
