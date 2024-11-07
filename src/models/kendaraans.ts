@@ -10,7 +10,7 @@ export const kendaraans = pgTable("kendaraans", {
     status: text().notNull(),
     condition: text().notNull(),
     warranty: date().notNull(),
-    capacity: integer().notNull(),
+    capacity: integer().notNull(),  
     category: text().notNull(),
     color: text().notNull(),
     photo: text(),

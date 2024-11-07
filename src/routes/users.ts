@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { logs } from "@/models/logs.ts";
+import { getUser } from "@/utils/getUser.ts";
         
 const SALT_ROUNDS = 10;
 
@@ -102,6 +103,42 @@ export const route = (instance: typeof server) => { instance
         return {
             statusCode: 200,
             message: "Success"
+        };
+    })
+    .get("/", {
+        schema: {
+            description: "Get user by id",
+            tags: ["users"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: userSchema.select.omit({ password: true })
+                })),
+                401: genericResponse(401)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const res = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, actor.id))
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res[0]
         };
     })
     
