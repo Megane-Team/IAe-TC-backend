@@ -23,7 +23,6 @@ export const route = (instance: typeof server) => { instance
                     token: z.string()
                 })),
                 401: genericResponse(401),
-                404: genericResponse(404)
             }
         },
     }, async (req) => {

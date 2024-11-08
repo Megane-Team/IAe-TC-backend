@@ -12,6 +12,7 @@ import fjwt, { FastifyJWT } from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
 import { db } from "./modules/database.ts";
 import { users } from "./models/users.ts";
+import fstatic from '@fastify/static'
 
 const server = fastify({
     logger: {
@@ -81,21 +82,6 @@ server.register(import("@scalar/fastify-api-reference"), {
     }
 });
 
-// jwt
-server.register(fjwt, { secret: secretToken as any})
-
-server.addHook('preHandler', (req, res, next) => {
-  // here we are
-  req.jwt = server.jwt
-  return next()
-})
-
-// cookies
-server.register(fCookie, {
-  secret: secretToken,
-  hook: 'preHandler',
-})
-
 // TODO: Enable security headers
 // server.register(import("@fastify/helmet"));
 // server.register(import("@fastify/cors"));
@@ -128,6 +114,28 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
 
     return { ...newPayload, ...payload };
 });
+
+// jwt
+server.register(fjwt, { secret: secretToken as any})
+
+server.addHook('preHandler', (req, res, next) => {
+  // here we are
+  req.jwt = server.jwt
+  return next()
+})
+
+// cookies
+server.register(fCookie, {
+  secret: secretToken,
+  hook: 'preHandler',
+})
+
+// multipart
+server.register(fstatic, {
+    root: resolve(import.meta.dirname, 'public'),
+    prefix: '/public/assets/', // optional: default '/'
+    constraints: { host: 'localhost:3000' } // optional: default {}
+  })
 
 
 server.listen({ port: port, host: host })
