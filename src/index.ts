@@ -13,6 +13,7 @@ import fCookie from '@fastify/cookie'
 import { db } from "./modules/database.ts";
 import { users } from "./models/users.ts";
 import fstatic from '@fastify/static'
+import fmultipart from '@fastify/multipart'
 
 const server = fastify({
     logger: {
@@ -119,24 +120,35 @@ server.addHook("preSerialization", async (req, rep, payload: Record<string, unkn
 server.register(fjwt, { secret: secretToken as any})
 
 server.addHook('preHandler', (req, res, next) => {
-  // here we are
-  req.jwt = server.jwt
-  return next()
+    // here we are    
+    req.jwt = server.jwt
+    return next()
 })
 
 // cookies
 server.register(fCookie, {
-  secret: secretToken,
-  hook: 'preHandler',
+    secret: secretToken,
+    hook: 'preHandler',
 })
 
-// multipart
+// static
 server.register(fstatic, {
-    root: resolve(import.meta.dirname, 'public'),
-    prefix: '/public/assets/', // optional: default '/'
+    root: resolve(import.meta.dirname, 'public/assets'),
+    prefix: '/public/', // optional: default '/'
     constraints: { host: 'localhost:3000' } // optional: default {}
-  })
+})
 
+server.register(fmultipart, {
+    limits: {
+        fieldNameSize: 100, // Max field name size in bytes
+        fieldSize: 100,     // Max field value size in bytes
+        fields: 10,         // Max number of non-file fields
+        fileSize: 1000000,  // For multipart forms, the max file size in bytes
+        files: 1,           // Max number of file fields
+        headerPairs: 2000,  // Max number of header key=>value pairs
+        parts: 1000         // For multipart forms, the max number of parts (fields + files)
+    }
+})
 
 server.listen({ port: port, host: host })
     .catch((error) => {

@@ -1,28 +1,32 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
-import { tempats, tempatSchema } from "@/models/tempat.ts";
-import { db } from "@/modules/database.ts";
 import { getUser } from "@/utils/getUser.ts";
+import fs from "fs";
+import { join } from "path";
 import { z } from "zod";
 
-export const prefix = "/tempats";
+export const prefix = "/photoFiles";
 export const route = (instance: typeof server) => { instance
-    .get("/", {
+    .get("/tempat/:id", {
         schema: {
             description: "get all the tempat data",
             tags: ["tempats"],
+            params: z.object({
+                id: z.string()
+            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(tempatSchema.select.omit({ createdAt: true }))
+                    data: z.any()
                 })),
 
-                401: genericResponse(401)
+                401: genericResponse(401),
+                404: genericResponse(404)
             }
         }
-    }, async (req) => {
+    }, async (req, reply) => {
         const actor = await getUser(req.headers["authorization"], instance);
 
         if (!actor) {
@@ -31,18 +35,21 @@ export const route = (instance: typeof server) => { instance
                 message: "Unauthorized"
             };
         }
+        
+        const { id } = req.params;
 
-        const res = await db
-            .select()
-            .from(tempats)
-            .execute();
+        // check if file exists
+        const path = join(import.meta.dirname, `../public/assets/tempat/${id}.jpg`)
+        console.log(path)
 
-        console.log(res);
+        if (!fs.existsSync(path)) {
+            return {
+                statusCode: 404,
+                message: "File not found"
+            }
+        }
 
-        return {
-            statusCode: 200,
-            message: "Success",
-            data: res
-        };
+        return reply.sendFile(`./tempat/${id}.jpg`)
     })
+
 }
