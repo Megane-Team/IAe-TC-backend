@@ -81,8 +81,6 @@ export const route = (instance: typeof server) => { instance
         .from(ruangans)
         .where(eq(ruangans.tempatId, numberId))
 
-        console.log('ruangan: ', res)
-
         return {
             statusCode: 200,
             message: 'Success',
