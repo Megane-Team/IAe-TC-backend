@@ -3,14 +3,18 @@ import { server } from "@/index.ts"
 import { barangs, barangSchema } from "@/models/barangs.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
+import { eq } from "drizzle-orm"
 import { z } from "zod"
 
-export const prefix = "/barang"
+export const prefix = "/:id/barangs"
 export const route = (instance: typeof server) => instance
     .get("/", {
         schema: {
             description: "get all the barang data",
             tags: ["barangs"],
+            params: z.object({
+                id: z.string(),
+            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
@@ -32,10 +36,14 @@ export const route = (instance: typeof server) => instance
             };
         }
 
+        const { id } = req.params
+        const numberId = Number(id);
+
         const res = await db
             .select()
             .from(barangs)
-            .execute()
+            .where(eq(barangs.ruanganId, numberId))
+            .execute();
 
         return {
             statusCode: 200,
