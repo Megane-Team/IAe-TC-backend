@@ -131,7 +131,6 @@ export const route = (instance: typeof server) => { instance
         const res = await db
             .select()
             .from(users)
-            .where(eq(users.id, actor.id))
             .execute();
 
         return {

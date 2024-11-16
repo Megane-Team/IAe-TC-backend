@@ -1,5 +1,6 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
+import { barangs, barangSchema } from "@/models/barangs.ts";
 import { ruangans, ruanganSchema } from "@/models/ruangans.ts";
 import { db } from "@/modules/database.ts";
 import { getUser } from "@/utils/getUser.ts";
@@ -75,7 +76,7 @@ export const route = (instance: typeof server) => { instance
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(ruanganSchema.select.omit({ createdAt: true }))
+                    data: z.array(barangSchema.select.omit({ createdAt: true }))
                 })),
                 401: genericResponse(401),
             }
@@ -95,9 +96,12 @@ export const route = (instance: typeof server) => { instance
 
         const res = await db
             .select()
-            .from(ruangans)
-            .where(eq(ruangans.tempatId, numberId))
+            .from(barangs)
+            .where(eq(barangs.ruanganId, numberId))
             .execute();
+
+        console.log
+        console.log(res)
 
         return {
             statusCode: 200,
