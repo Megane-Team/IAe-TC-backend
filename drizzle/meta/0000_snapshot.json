@@ -1,5 +1,5 @@
 {
-  "id": "184dbcb5-e00f-4b47-86d5-6d10e538d371",
+  "id": "f0506322-d8e0-400a-95f4-fbd5d64ab2df",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -638,12 +638,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "place": {
-          "name": "place",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "address": {
           "name": "address",
           "type": "text",
@@ -660,7 +654,7 @@
           "name": "phone_number",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "password": {
           "name": "password",

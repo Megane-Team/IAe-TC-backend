@@ -8,12 +8,11 @@ import pg from "pg";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import status from "statuses";
-import fjwt, { FastifyJWT } from '@fastify/jwt'
+import fjwt from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
-import { db } from "./modules/database.ts";
-import { users } from "./models/users.ts";
 import fstatic from '@fastify/static'
 import fmultipart from '@fastify/multipart'
+import { checkAndInsertDefaultUser } from "./utils/defaultData.ts";
 
 const server = fastify({
     logger: {
@@ -23,25 +22,14 @@ const server = fastify({
     }
 }).withTypeProvider<ZodTypeProvider>();
 
-async function checkAndInsertDefaultUser() {
-    const result = await db.select().from(users)
-
-    if (result.length === 0) {
-        await db.insert(users).values({
-            name: "Admin",
-            email: "myalghani@gmail.com",
-            role: "admin",
-            division: "admin",
-            place: "admin",
-            address: "admin",
-            phoneNumber: "admin",
-            photo: "admin",
-            password: "$2a$10$ceefmQ/dcSGovOt0QGGLB.ZFfKzwm6BMJTShVJ9ofWjUNJAnvgYAW",
-            createdAt: new Date(),
-        });
-        server.log.warn("Default user inserted");
-    }
-}
+// graceful shutdown
+const listeners = ['SIGINT', 'SIGTERM']
+listeners.forEach((signal) => {
+  process.on(signal, async () => {
+    await server.close()
+    process.exit(0)
+  })
+})
 
 try {
     server.log.warn("Migrating database...");
@@ -50,7 +38,9 @@ try {
     await migrate(drizzle(migrationClient, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
     server.log.warn("Database migrated successfully");
 
-    await checkAndInsertDefaultUser();
+    if ( await checkAndInsertDefaultUser() ) {
+        server.log.warn("Default user inserted successfully");
+    }
 
     await migrationClient.end();
 }

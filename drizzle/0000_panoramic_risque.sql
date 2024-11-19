@@ -76,10 +76,9 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"email" text NOT NULL,
 	"role" text NOT NULL,
 	"division" text NOT NULL,
-	"place" text NOT NULL,
 	"address" text NOT NULL,
 	"photo" text,
-	"phone_number" text NOT NULL,
+	"phone_number" text,
 	"password" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")

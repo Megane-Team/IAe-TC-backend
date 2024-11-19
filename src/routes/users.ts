@@ -4,12 +4,10 @@ import { users, userSchema } from "@/models/users.ts";
 import { db } from "@/modules/database.ts";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import bcrypt from "bcrypt";
 import { logs } from "@/models/logs.ts";
 import { getUser } from "@/utils/getUser.ts";
+import argon2 from "argon2";
         
-const SALT_ROUNDS = 10;
-
 export const prefix = "/users";
 export const route = (instance: typeof server) => { instance
     .post("/login", {
@@ -37,7 +35,7 @@ export const route = (instance: typeof server) => { instance
             }; 
         }
 
-        const result = await bcrypt.compare(password, user[0].password);
+        const result = await argon2.verify(user[0].password, password);
 
         if (!result) {
             return {
@@ -73,7 +71,7 @@ export const route = (instance: typeof server) => { instance
         }
     }, async (req) => {
 
-        const { name, email, password, role, division, place, phoneNumber, address, photo} = req.body;
+        const { name, email, password, role, division, phoneNumber, address, photo} = req.body;
 
         const user = await db.select().from(users).where(eq(users.email, email)).execute();
 
@@ -84,7 +82,7 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        const hashedPassword = await argon2.hash(password);
 
         await db.insert(users).values({
             name: name,
@@ -92,7 +90,6 @@ export const route = (instance: typeof server) => { instance
             password: hashedPassword,
             role: role,
             division: division,
-            place: place,
             address: address,
             phoneNumber: phoneNumber,
             photo: photo,
