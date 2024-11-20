@@ -1,13 +1,14 @@
 import { sql } from "drizzle-orm"
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 import { z } from "zod"
 
+export const role = pgEnum('role', ['admin', 'user', 'headAdmin'])
 export const users = pgTable("users", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),
     email: text().notNull().unique(),
-    role: text().notNull(),
+    role: role(),
     division: text().notNull(),
     address: text().notNull(), 
     photo: text(),

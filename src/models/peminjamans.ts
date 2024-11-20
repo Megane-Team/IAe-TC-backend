@@ -1,15 +1,16 @@
 import { sql } from "drizzle-orm";
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { users } from "./users.ts";
 import { ruangans } from "./ruangans.ts";
 import { barangs } from "./barangs.ts";
 import { kendaraans } from "./kendaraans.ts";
 
+export const peminjamanCategory = pgEnum('category', ['barang', 'kendaraan', 'ruangan'])
 export const peminjamans = pgTable("peminjamans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     status: text().notNull(),
-    category: text().notNull(),
+    category: peminjamanCategory(),
     borrowedDate: timestamp({ withTimezone: true }).notNull(),
     estimatedTime: timestamp({ withTimezone: true }).notNull(),
     returnDate: timestamp({ withTimezone: true }),

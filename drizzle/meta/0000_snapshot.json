@@ -1,5 +1,5 @@
 {
-  "id": "f0506322-d8e0-400a-95f4-fbd5d64ab2df",
+  "id": "c79e1115-04ca-4a3b-8556-14919fd02d18",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -156,9 +156,10 @@
         },
         "category": {
           "name": "category",
-          "type": "text",
+          "type": "category",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "color": {
           "name": "color",
@@ -279,6 +280,70 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.notifikasis": {
+      "name": "notifikasis",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "notifikasis_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "category": {
+          "name": "category",
+          "type": "category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_read": {
+          "name": "is_read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "notifikasis_user_id_users_id_fk": {
+          "name": "notifikasis_user_id_users_id_fk",
+          "tableFrom": "notifikasis",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.peminjamans": {
       "name": "peminjamans",
       "schema": "",
@@ -308,9 +373,10 @@
         },
         "category": {
           "name": "category",
-          "type": "text",
+          "type": "category",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "borrowed_date": {
           "name": "borrowed_date",
@@ -476,9 +542,10 @@
         },
         "category": {
           "name": "category",
-          "type": "text",
+          "type": "category",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "photo": {
           "name": "photo",
@@ -559,9 +626,10 @@
         },
         "category": {
           "name": "category",
-          "type": "text",
+          "type": "category",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "photo": {
           "name": "photo",
@@ -628,9 +696,10 @@
         },
         "role": {
           "name": "role",
-          "type": "text",
+          "type": "role",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "division": {
           "name": "division",
@@ -687,7 +756,25 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.category": {
+      "name": "category",
+      "schema": "public",
+      "values": [
+        "gedung",
+        "parkiran"
+      ]
+    },
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "admin",
+        "user",
+        "headAdmin"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

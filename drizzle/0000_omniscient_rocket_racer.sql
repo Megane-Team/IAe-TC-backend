@@ -1,3 +1,5 @@
+CREATE TYPE "public"."category" AS ENUM('gedung', 'parkiran');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headAdmin');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "barangs" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "barangs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
@@ -18,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "kendaraans" (
 	"condition" text NOT NULL,
 	"warranty" date NOT NULL,
 	"capacity" integer NOT NULL,
-	"category" text NOT NULL,
+	"category" "category",
 	"color" text NOT NULL,
 	"photo" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -33,10 +35,17 @@ CREATE TABLE IF NOT EXISTS "logs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "notifikasis" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "notifikasis_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"category" "category",
+	"is_read" boolean DEFAULT false NOT NULL,
+	"user_id" integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "peminjamans" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "peminjamans_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"status" text NOT NULL,
-	"category" text NOT NULL,
+	"category" "category",
 	"borrowed_date" timestamp with time zone NOT NULL,
 	"estimated_time" timestamp with time zone NOT NULL,
 	"return_date" timestamp with time zone,
@@ -54,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "ruangans" (
 	"code" text NOT NULL,
 	"status" text NOT NULL,
 	"capacity" integer,
-	"category" text NOT NULL,
+	"category" "category",
 	"photo" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"tempat_id" integer NOT NULL,
@@ -64,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "ruangans" (
 CREATE TABLE IF NOT EXISTS "tempats" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "tempats_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
-	"category" text NOT NULL,
+	"category" "category",
 	"photo" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "tempats_name_unique" UNIQUE("name")
@@ -74,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
 	"email" text NOT NULL,
-	"role" text NOT NULL,
+	"role" "role",
 	"division" text NOT NULL,
 	"address" text NOT NULL,
 	"photo" text,
@@ -98,6 +107,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "logs" ADD CONSTRAINT "logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "notifikasis" ADD CONSTRAINT "notifikasis_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
-import { date, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { date, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { tempats } from "./tempat.ts";
 
+export const kendaraanCategory = pgEnum('category', ['mobil', 'motor', 'truk'])
 export const kendaraans = pgTable("kendaraans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),
@@ -11,7 +12,7 @@ export const kendaraans = pgTable("kendaraans", {
     condition: text().notNull(),
     warranty: date().notNull(),
     capacity: integer().notNull(),  
-    category: text().notNull(),
+    category: kendaraanCategory(),
     color: text().notNull(),
     photo: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
