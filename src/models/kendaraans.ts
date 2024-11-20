@@ -3,7 +3,7 @@ import { date, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { tempats } from "./tempat.ts";
 
-export const kendaraanCategory = pgEnum('category', ['mobil', 'motor', 'truk'])
+export const kendaraanCategory = pgEnum('kcategory', ['mobil', 'motor', 'truk'])
 export const kendaraans = pgTable("kendaraans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),
