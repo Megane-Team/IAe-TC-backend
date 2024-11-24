@@ -13,6 +13,14 @@ import fCookie from '@fastify/cookie'
 import fstatic from '@fastify/static'
 import fmultipart from '@fastify/multipart'
 import { checkAndInsertDefaultUser } from "./utils/defaultData.ts";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
+
+initializeApp({
+    credential: applicationDefault(),
+    projectId: "inventara-backend-notification"
+});
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 const server = fastify({
     logger: {

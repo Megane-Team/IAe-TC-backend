@@ -13,7 +13,7 @@ export async function checkAndInsertDefaultUser() {
             name: "Admin",
             email: "example@gmail.com",
             role: "admin",
-            division: "admin",
+            unit: "admin",
             address: "admin",
             phoneNumber: "123456789",
             photo: "admin",

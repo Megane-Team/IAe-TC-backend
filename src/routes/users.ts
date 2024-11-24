@@ -10,6 +10,36 @@ import argon2 from "argon2";
         
 export const prefix = "/users";
 export const route = (instance: typeof server) => { instance
+    .get("/", {
+        schema: {
+            description: "Get user by id",
+            tags: ["users"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: userSchema.select.omit({ password: true })
+                })),
+                401: genericResponse(401)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: actor
+        };
+    })
     .post("/login", {
         schema: {
             description: "Login user",
@@ -71,9 +101,9 @@ export const route = (instance: typeof server) => { instance
         }
     }, async (req) => {
 
-        const { name, email, password, role, division, phoneNumber, address, photo} = req.body;
+        const { name, email, password, role, unit, phoneNumber, address, photo} = req.body;
 
-        const user = await db.select().from(users).where(eq(users.email, email)).execute();
+        const user = await db.select().from(users).where(eq(users.email, email!)).execute();
 
         if (user.length > 0) {
             return {
@@ -89,7 +119,7 @@ export const route = (instance: typeof server) => { instance
             email: email,
             password: hashedPassword,
             role: role,
-            division: division,
+            unit: unit,
             address: address,
             phoneNumber: phoneNumber,
             photo: photo,
@@ -101,40 +131,4 @@ export const route = (instance: typeof server) => { instance
             message: "Success"
         };
     })
-    .get("/", {
-        schema: {
-            description: "Get user by id",
-            tags: ["users"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            response: {
-                200: genericResponse(200).merge(z.object({
-                    data: userSchema.select.omit({ password: true })
-                })),
-                401: genericResponse(401)
-            }
-        }
-    }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
-        const res = await db
-            .select()
-            .from(users)
-            .execute();
-
-        return {
-            statusCode: 200,
-            message: "Success",
-            data: res[0]
-        };
-    })
-    
 }

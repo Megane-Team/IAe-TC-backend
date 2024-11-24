@@ -1,5 +1,5 @@
 {
-  "id": "0e55b7e1-a25d-4b73-8273-1aabf11c2346",
+  "id": "0455def3-545d-476e-889c-a5deec9c90dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -692,7 +692,7 @@
           "name": "email",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "role": {
           "name": "role",
@@ -701,8 +701,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "division": {
-          "name": "division",
+        "unit": {
+          "name": "unit",
           "type": "text",
           "primaryKey": false,
           "notNull": true
