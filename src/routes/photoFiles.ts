@@ -9,8 +9,8 @@ export const prefix = "/photoFiles";
 export const route = (instance: typeof server) => { instance
     .get("/tempat/:id", {
         schema: {
-            description: "get all the tempat data",
-            tags: ["tempats"],
+            description: "get all the tempat photo data",
+            tags: ["photo"],
             params: z.object({
                 id: z.string()
             }),
@@ -53,8 +53,8 @@ export const route = (instance: typeof server) => { instance
     })
     .get('/ruangan/:id', {
         schema: {
-            description: "get all the ruangan data by tempat id",
-            tags: ["tempats"],
+            description: "get the ruangan photo data by tempat id",
+            tags: ["photo"],
             params: z.object({
                 id: z.string()
             }),
@@ -97,8 +97,8 @@ export const route = (instance: typeof server) => { instance
     })
     .get('/barang/:id', {
         schema: {
-            description: "get all the barang data",
-            tags: ["barangs"],
+            description: "get all the barang photo data",
+            tags: ["photo"],
             params: z.object({
                 id: z.string()
             }),

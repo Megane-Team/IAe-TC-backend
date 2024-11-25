@@ -1,6 +1,7 @@
 import { boolean, integer, pgEnum, pgTable, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users.ts";
 import { sql } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const notifikasiCategory = pgEnum('ncategory', ['PB', 'DK', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP'])
 export const notifikasis = pgTable("notifikasis", {
@@ -10,3 +11,8 @@ export const notifikasis = pgTable("notifikasis", {
     userId: integer().notNull().references(() => users.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
+
+export const notifikasiSchema = {
+    insert: createInsertSchema(notifikasis),
+    select: createSelectSchema(notifikasis)
+}
