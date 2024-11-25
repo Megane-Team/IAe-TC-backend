@@ -7,6 +7,7 @@ import { z } from "zod";
 import { logs } from "@/models/logs.ts";
 import { getUser } from "@/utils/getUser.ts";
 import argon2 from "argon2";
+import { perangkats } from "@/models/perangkat.ts";
         
 export const prefix = "/users";
 export const route = (instance: typeof server) => { instance
@@ -44,7 +45,9 @@ export const route = (instance: typeof server) => { instance
         schema: {
             description: "Login user",
             tags: ["login"],
-            body: userSchema.select.pick({ email: true, password: true }),
+            body: userSchema.select.pick({ email: true, password: true }).merge(z.object({
+                deviceToken: z.string()
+            })),
             response: {
                 // return token
                 200: genericResponse(200).merge(z.object({
@@ -54,7 +57,7 @@ export const route = (instance: typeof server) => { instance
             }
         },
     }, async (req) => {
-        const { email, password } = req.body;
+        const { email, password, deviceToken } = req.body;
 
         const user = await db.select().from(users).where(eq(users.email, email)).execute();
 
@@ -76,7 +79,21 @@ export const route = (instance: typeof server) => { instance
 
         const token = req.jwt.sign({ id: user[0].id }); 
 
-        // make a logs
+        const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
+        
+        if (perangkat.length === 0) {
+            await db.insert(perangkats).values({
+                deviceToken: deviceToken,
+                userId: user[0].id
+            })
+        }
+
+        if (perangkat[0].id !== user[0].id) {
+            await db.update(perangkats).set({
+                userId: user[0].id
+            }).where(eq(perangkats.deviceToken, deviceToken)).execute();    
+        }
+
         await db.insert(logs).values({
             userId: user[0].id,
             action: "login",

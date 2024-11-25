@@ -54,12 +54,20 @@ CREATE TABLE IF NOT EXISTS "peminjamans" (
 	"estimated_time" timestamp with time zone NOT NULL,
 	"return_date" timestamp with time zone,
 	"objective" text NOT NULL,
+	"destination" text,
 	"passenger" integer,
 	"user_id" integer NOT NULL,
 	"ruangan_id" integer,
 	"barang_id" integer,
 	"kendaraan_id" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "perangkats" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "perangkats_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"device_token" text NOT NULL,
+	"user_id" integer NOT NULL,
+	CONSTRAINT "perangkats_deviceToken_unique" UNIQUE("device_token")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "ruangans" (
@@ -141,6 +149,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "peminjamans" ADD CONSTRAINT "peminjamans_kendaraan_id_kendaraans_id_fk" FOREIGN KEY ("kendaraan_id") REFERENCES "public"."kendaraans"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "perangkats" ADD CONSTRAINT "perangkats_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

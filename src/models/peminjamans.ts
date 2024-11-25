@@ -15,6 +15,7 @@ export const peminjamans = pgTable("peminjamans", {
     estimatedTime: timestamp({ withTimezone: true }).notNull(),
     returnDate: timestamp({ withTimezone: true }),
     objective: text().notNull(),
+    destination: text(),
     passenger: integer(),
     userId: integer().notNull().references(() => users.id),
     ruanganId: integer().references(() => ruangans.id),
