@@ -52,6 +52,53 @@ export const route = (instance: typeof server) => { instance
             data: notif
         };
     })
+    .get("/updateRead/:id", {
+        schema: {
+            description: "Set isRead to true",
+            tags: ["notifikasi"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                401: genericResponse(401)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId= parseInt(id);
+
+        const notif = await db
+            .update(notifikasis)
+            .set({
+                isRead: true
+            })
+            .where(eq(notifikasis.id, numId))
+
+        if (!notif) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success"
+        };
+    })
     .post("/send/:id", {
         schema: {
             description: "Send notification",
