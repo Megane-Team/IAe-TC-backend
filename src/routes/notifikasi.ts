@@ -1,6 +1,8 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { notifikasis, notifikasiSchema } from "@/models/notifikasis.ts";
+import { perangkats } from "@/models/perangkat.ts";
+import { users } from "@/models/users.ts";
 import { db } from "@/modules/database.ts";
 import { getUser } from "@/utils/getUser.ts";
 import { eq } from "drizzle-orm";
@@ -101,7 +103,7 @@ export const route = (instance: typeof server) => { instance
     })
     .post("/send/:id", {
         schema: {
-            description: "Send notification",
+            description: "Send notification to user id",
             tags: ["notifikasi"],
             params: z.object({
                 id: z.string()
@@ -109,14 +111,11 @@ export const route = (instance: typeof server) => { instance
             // headers: z.object({
             //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             // }),
-            body: z.object({
-                title: z.string(),
-                message: z.string(),
-                deviceToken: z.string()
-            }),
+            body: notifikasiSchema.insert.pick({ category: true }),
             response: {
                 200: genericResponse(200),
-                401: genericResponse(401)
+                401: genericResponse(401),
+                404: genericResponse(404)
             }
         }
     }, async (req) => {
@@ -130,22 +129,101 @@ export const route = (instance: typeof server) => { instance
         // }
 
         const { id } = req.params;
+        const numId = parseInt(id);
 
-        const message = {
-            notification: {
-                title: 'Notif',
-                body: 'This is a notification'
-            },
-            token: req.body.deviceToken
+        var user = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, numId))
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
         }
 
-        getMessaging()
-            .send(message)
-            .then((response) => {
-                console.log('Successfully sent message:', response);
-            })
-            .catch((error) => {
-                console.log('Error sending message:', error);
+        var { category } = req.body;
+        
+        var devicesToken = await db
+            .select()
+            .from(perangkats)
+            .where(eq(perangkats.userId, user[0].id))
+
+        if (devicesToken.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const getNotificationMessage = (kategori: string): string => {
+            switch (kategori) {
+                case 'PB':
+                    return 'Kamu berhasil mengajukan peminjaman!';
+                case 'PD':
+                    return 'Peminjaman mu telah di konfirmasi!';
+                case 'PG':
+                    return 'Pengajuan peminjaman mu gagal coba lagi nanti!';
+                case 'PDB':
+                    return 'Kamu berhasil membatalkan pengajuan peminjamanmu!';
+                case 'PDT':
+                    return 'Pengajuan peminjaman mu ditolak!';
+                case 'JT':
+                    return 'Peminjaman mu sebentar lagi berakhir jangan lupa untuk mengembalikanya!';
+                case 'DO':
+                    return 'Pengajuan peminjaman telah dibatalkan secara otomatis!';
+                default:
+                    return 'Notifikasi tidak dikenal';
+            }
+        };
+
+        const getNotificationTitleMessage = (kategori: string): string => {
+            switch (kategori) {
+                case 'PB':
+                    return 'Peminjaman berhasil';
+                case 'PD':
+                    return 'Peminjaman dikonfirmasi!';
+                case 'PG':
+                    return 'Peminjaman gagal!';
+                case 'PDB':
+                    return 'Peminjaman telah dibatalkan';
+                case 'PDT':
+                    return 'Peminjaman ditolak!';
+                case 'JT':
+                    return 'Waktu peminjaman akan segera berakhir!';
+                case 'DO':
+                    return 'Peminjaman dibatalkan otomatis!';
+                default:
+                    return 'Notifikasi tidak dikenal';
+            }
+        };
+
+        devicesToken.forEach((device) => {
+            const messages = {
+                notification: {
+                    title: 'Notif',
+                    body: 'This is a notification'
+                },
+                token: device.deviceToken
+            };
+
+            db.insert(notifikasis)
+                .values({
+                    userId: user[0].id,
+                    category: category,
+                    isRead: false,
+                })
+                .execute();
+
+            getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
             });
 
         return {

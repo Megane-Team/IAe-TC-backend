@@ -1,5 +1,5 @@
 CREATE TYPE "public"."kcategory" AS ENUM('mobil', 'motor', 'truk');--> statement-breakpoint
-CREATE TYPE "public"."ncategory" AS ENUM('PB', 'DK', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP');--> statement-breakpoint
+CREATE TYPE "public"."ncategory" AS ENUM('PB', 'PD', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP');--> statement-breakpoint
 CREATE TYPE "public"."pcategory" AS ENUM('barang', 'kendaraan', 'ruangan');--> statement-breakpoint
 CREATE TYPE "public"."rcategory" AS ENUM('kelas', 'lab', 'gudang');--> statement-breakpoint
 CREATE TYPE "public"."tcategory" AS ENUM('gedung', 'parkiran');--> statement-breakpoint

@@ -3,7 +3,7 @@ import { users } from "./users.ts";
 import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const notifikasiCategory = pgEnum('ncategory', ['PB', 'DK', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP'])
+export const notifikasiCategory = pgEnum('ncategory', ['PB', 'PD', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP'])
 export const notifikasis = pgTable("notifikasis", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     category: notifikasiCategory(),

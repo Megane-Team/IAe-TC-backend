@@ -1,5 +1,5 @@
 {
-  "id": "6570631c-dce0-4aba-b5ec-4e3d0b1c1be8",
+  "id": "308622b7-b236-4d87-ade4-8b3011f54e9d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -848,7 +848,7 @@
       "schema": "public",
       "values": [
         "PB",
-        "DK",
+        "PD",
         "PG",
         "PDB",
         "PDT",
