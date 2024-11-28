@@ -1,6 +1,7 @@
 CREATE TYPE "public"."kcategory" AS ENUM('mobil', 'motor', 'truk');--> statement-breakpoint
 CREATE TYPE "public"."ncategory" AS ENUM('PB', 'PD', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP');--> statement-breakpoint
 CREATE TYPE "public"."pcategory" AS ENUM('barang', 'kendaraan', 'ruangan');--> statement-breakpoint
+CREATE TYPE "public"."status" AS ENUM('draft', 'pending', 'approved', 'rejected');--> statement-breakpoint
 CREATE TYPE "public"."rcategory" AS ENUM('kelas', 'lab', 'gudang');--> statement-breakpoint
 CREATE TYPE "public"."tcategory" AS ENUM('gedung', 'parkiran');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headAdmin');--> statement-breakpoint
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS "notifikasis" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "peminjamans" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "peminjamans_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"status" text NOT NULL,
+	"status" "status" NOT NULL,
 	"category" "pcategory",
 	"borrowed_date" timestamp with time zone NOT NULL,
 	"estimated_time" timestamp with time zone NOT NULL,

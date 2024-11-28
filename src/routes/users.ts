@@ -13,7 +13,7 @@ export const prefix = "/users";
 export const route = (instance: typeof server) => { instance
     .get("/", {
         schema: {
-            description: "Get user by id",
+            description: "Get user by token",
             tags: ["users"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))

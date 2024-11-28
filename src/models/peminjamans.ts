@@ -7,9 +7,10 @@ import { barangs } from "./barangs.ts";
 import { kendaraans } from "./kendaraans.ts";
 
 export const peminjamanCategory = pgEnum('pcategory', ['barang', 'kendaraan', 'ruangan'])
+export const status = pgEnum('status', ['draft', 'pending', 'approved', 'rejected'])
 export const peminjamans = pgTable("peminjamans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
-    status: text().notNull(),
+    status: status().notNull(),
     category: peminjamanCategory(),
     borrowedDate: timestamp({ withTimezone: true }).notNull(),
     estimatedTime: timestamp({ withTimezone: true }).notNull(),

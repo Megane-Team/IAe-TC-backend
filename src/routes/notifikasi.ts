@@ -202,8 +202,8 @@ export const route = (instance: typeof server) => { instance
         devicesToken.forEach((device) => {
             const messages = {
                 notification: {
-                    title: 'Notif',
-                    body: 'This is a notification'
+                    title: getNotificationTitleMessage(category?.toString() ?? ''),
+                    body: getNotificationMessage(category?.toString() ?? '')
                 },
                 token: device.deviceToken
             };

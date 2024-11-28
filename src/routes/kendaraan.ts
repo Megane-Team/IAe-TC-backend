@@ -1,26 +1,26 @@
-import { genericResponse } from "@/constants.ts"
-import { server } from "@/index.ts"
-import { barangs, barangSchema } from "@/models/barangs.ts"
-import { db } from "@/modules/database.ts"
-import { getUser } from "@/utils/getUser.ts"
-import { eq } from "drizzle-orm"
-import { z } from "zod"
+import { genericResponse } from "@/constants.ts";
+import { server } from "@/index.ts";
+import { kendaraans, kendaraanSchema } from "@/models/kendaraans.ts";
+import { db } from "@/modules/database.ts";
+import { getUser } from "@/utils/getUser.ts";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
-export const prefix = "/barangs"
-export const route = (instance: typeof server) => instance
+export const prefix = "/kendaraans";
+export const route = (instance: typeof server) => { instance
     .get("/:id", {
         schema: {
-            description: "get all the barang data",
-            tags: ["barangs"],
-            params: z.object({
-                id: z.string(),
-            }),
+            description: "get kendaraan",
+            tags: ["kendaraans"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
+            params: z.object({
+                id: z.string()
+            }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(barangSchema.select.omit({ createdAt: true }))
+                    data: z.array(kendaraanSchema.select.omit({ createdAt: true }))
                 })),
 
                 401: genericResponse(401)
@@ -36,13 +36,13 @@ export const route = (instance: typeof server) => instance
             };
         }
 
-        const { id } = req.params
-        const numberId = Number(id);
+        const { id } = req.params;
+        const numberId = parseInt(id);
 
         if (!id) {
             const res = await db
                 .select()
-                .from(barangs)
+                .from(kendaraans)
                 .execute();
 
             return {
@@ -53,8 +53,8 @@ export const route = (instance: typeof server) => instance
         } else {
             const res = await db
                 .select()
-                .from(barangs)
-                .where(eq(barangs.id, numberId))
+                .from(kendaraans)
+                .where(eq(kendaraans.id, numberId))
                 .execute();
 
             return {
@@ -62,5 +62,6 @@ export const route = (instance: typeof server) => instance
                 message: "Success",
                 data: res
             }
-        }
-    });
+        } 
+    })
+}

@@ -143,7 +143,7 @@ export const route = (instance: typeof server) => { instance
         const res = await db
             .select()
             .from(kendaraans)
-            .where(eq(kendaraans.id, numberId))
+            .where(eq(kendaraans.tempatId, numberId))
             .execute();
 
         return {

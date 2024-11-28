@@ -1,5 +1,5 @@
 {
-  "id": "308622b7-b236-4d87-ade4-8b3011f54e9d",
+  "id": "f514c1f7-9240-47ea-9c1d-4ff77138a711",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -374,7 +374,8 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -864,6 +865,16 @@
         "barang",
         "kendaraan",
         "ruangan"
+      ]
+    },
+    "public.status": {
+      "name": "status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected"
       ]
     },
     "public.rcategory": {

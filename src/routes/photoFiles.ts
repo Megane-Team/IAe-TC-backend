@@ -40,7 +40,6 @@ export const route = (instance: typeof server) => { instance
 
         // check if file exists
         const path = join(import.meta.dirname, `../public/assets/tempat/${id}.jpg`)
-        console.log(path)
 
         if (!fs.existsSync(path)) {
             return {
@@ -84,7 +83,6 @@ export const route = (instance: typeof server) => { instance
 
         // check if file exists
         const path = join(import.meta.dirname, `../public/assets/ruangan/${id}.jpg`)
-        console.log(path)
 
         if (!fs.existsSync(path)) {
             return {
@@ -97,7 +95,7 @@ export const route = (instance: typeof server) => { instance
     })
     .get('/barang/:id', {
         schema: {
-            description: "get all the barang photo data",
+            description: "get barang photo data",
             tags: ["photo"],
             params: z.object({
                 id: z.string()
@@ -128,7 +126,6 @@ export const route = (instance: typeof server) => { instance
 
         // check if file exists
         const path = join(import.meta.dirname, `../public/assets/barang/${id}.jpg`)
-        console.log(path)
 
         if (!fs.existsSync(path)) {
             return {
@@ -138,6 +135,49 @@ export const route = (instance: typeof server) => { instance
         }
 
         return reply.sendFile(`./barang/${id}.jpg`)
+    })
+    .get('/kendaraan/:id', {
+        schema: {
+            description: "get kendaraan photo data",
+            tags: ["photo"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.any()
+                })),
+
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req, reply) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+        
+        const { id } = req.params;
+
+        // check if file exists
+        const path = join(import.meta.dirname, `../public/assets/kendaraan/${id}.jpg`)
+        
+        if (!fs.existsSync(path)) {
+            return {
+                statusCode: 404,
+                message: "File not found"
+            }
+        }
+
+        return reply.sendFile(`./kendaraan/${id}.jpg`)
     })
 
 }
