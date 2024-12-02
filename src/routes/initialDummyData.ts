@@ -352,17 +352,6 @@ export const route = (instance: typeof server) => { instance
                     createdAt: new Date()
                 },
                 {
-                    status: "draft",
-                    category: "ruangan",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    userId: 1,
-                    ruanganId: 1,
-                    createdAt: new Date()
-                },
-                {
                     status: "pending",
                     category: "barang",
                     borrowedDate: new Date(),

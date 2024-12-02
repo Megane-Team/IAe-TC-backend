@@ -1,5 +1,5 @@
 {
-  "id": "f514c1f7-9240-47ea-9c1d-4ff77138a711",
+  "id": "62915b24-ea01-428f-a6a7-d075e04ebb7b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -321,6 +321,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "peminjaman_id": {
+          "name": "peminjaman_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -337,6 +343,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "notifikasis_peminjaman_id_peminjamans_id_fk": {
+          "name": "notifikasis_peminjaman_id_peminjamans_id_fk",
+          "tableFrom": "notifikasis",
+          "tableTo": "peminjamans",
+          "columnsFrom": [
+            "peminjaman_id"
           ],
           "columnsTo": [
             "id"
@@ -874,7 +893,9 @@
         "draft",
         "pending",
         "approved",
-        "rejected"
+        "rejected",
+        "returned",
+        "canceled"
       ]
     },
     "public.rcategory": {

@@ -1,7 +1,7 @@
 CREATE TYPE "public"."kcategory" AS ENUM('mobil', 'motor', 'truk');--> statement-breakpoint
 CREATE TYPE "public"."ncategory" AS ENUM('PB', 'PD', 'PG', 'PDB', 'PDT', 'JT', 'DO', 'PP');--> statement-breakpoint
 CREATE TYPE "public"."pcategory" AS ENUM('barang', 'kendaraan', 'ruangan');--> statement-breakpoint
-CREATE TYPE "public"."status" AS ENUM('draft', 'pending', 'approved', 'rejected');--> statement-breakpoint
+CREATE TYPE "public"."status" AS ENUM('draft', 'pending', 'approved', 'rejected', 'returned', 'canceled');--> statement-breakpoint
 CREATE TYPE "public"."rcategory" AS ENUM('kelas', 'lab', 'gudang');--> statement-breakpoint
 CREATE TYPE "public"."tcategory" AS ENUM('gedung', 'parkiran');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headAdmin');--> statement-breakpoint
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "notifikasis" (
 	"category" "ncategory",
 	"is_read" boolean DEFAULT false NOT NULL,
 	"user_id" integer NOT NULL,
+	"peminjaman_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -127,6 +128,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "notifikasis" ADD CONSTRAINT "notifikasis_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "notifikasis" ADD CONSTRAINT "notifikasis_peminjaman_id_peminjamans_id_fk" FOREIGN KEY ("peminjaman_id") REFERENCES "public"."peminjamans"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

@@ -7,7 +7,7 @@ import { barangs } from "./barangs.ts";
 import { kendaraans } from "./kendaraans.ts";
 
 export const peminjamanCategory = pgEnum('pcategory', ['barang', 'kendaraan', 'ruangan'])
-export const status = pgEnum('status', ['draft', 'pending', 'approved', 'rejected'])
+export const status = pgEnum('status', ['draft', 'pending', 'approved', 'rejected', 'returned', 'canceled'])
 export const peminjamans = pgTable("peminjamans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     status: status().notNull(),
