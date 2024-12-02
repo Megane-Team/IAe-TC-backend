@@ -5,23 +5,17 @@ import { users } from "./users.ts";
 import { ruangans } from "./ruangans.ts";
 import { barangs } from "./barangs.ts";
 import { kendaraans } from "./kendaraans.ts";
+import { detailPeminjamans } from "./detailPeminjamans.ts";
 
 export const peminjamanCategory = pgEnum('pcategory', ['barang', 'kendaraan', 'ruangan'])
-export const status = pgEnum('status', ['draft', 'pending', 'approved', 'rejected', 'returned', 'canceled'])
 export const peminjamans = pgTable("peminjamans", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
-    status: status().notNull(),
     category: peminjamanCategory(),
-    borrowedDate: timestamp({ withTimezone: true }).notNull(),
-    estimatedTime: timestamp({ withTimezone: true }).notNull(),
-    returnDate: timestamp({ withTimezone: true }),
-    objective: text().notNull(),
-    destination: text(),
-    passenger: integer(),
     userId: integer().notNull().references(() => users.id),
     ruanganId: integer().references(() => ruangans.id),
     barangId: integer().references(() => barangs.id),
     kendaraanId: integer().references(() => kendaraans.id),
+    detailPeminjamanId: integer().references(() => detailPeminjamans.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 

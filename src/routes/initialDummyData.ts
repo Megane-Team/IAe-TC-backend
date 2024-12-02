@@ -1,6 +1,7 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { barangs } from "@/models/barangs.ts";
+import { detailPeminjamans } from "@/models/detailPeminjamans.ts";
 import { kendaraans } from "@/models/kendaraans.ts";
 import { peminjamans } from "@/models/peminjamans.ts";
 import { ruangans } from "@/models/ruangans.ts";
@@ -270,120 +271,190 @@ export const route = (instance: typeof server) => { instance
             ])
 
         await db
-            .insert(peminjamans)
+            .insert(detailPeminjamans)
             .values([
                 {
                     status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",   
-                    userId: 1,
-                    barangId: 1,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
+                    borrowedDate: null,
+                    estimatedTime: null,
+                    returnDate: null,
                     objective: "Meeting",
-                    userId: 1,
-                    barangId: 2,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    userId: 1,
-                    barangId: 3,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    userId: 1,
-                    barangId: 4,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    userId: 1,
-                    barangId: 5,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "barang",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    userId: 1,
-                    barangId: 6,
-                    createdAt: new Date()
-                },
-                {
-                    status: "draft",
-                    category: "kendaraan",
-                    borrowedDate: new Date(),
-                    estimatedTime: new Date(),
-                    returnDate: new Date(),
-                    objective: "Meeting",
-                    destination: "Gedung IT",
-                    passenger: 10,
-                    userId: 1,
-                    kendaraanId: 1,
-                    createdAt: new Date()
+                    destination: "Kantor",
                 },
                 {
                     status: "pending",
-                    category: "barang",
                     borrowedDate: new Date(),
                     estimatedTime: new Date(),
                     returnDate: new Date(),
                     objective: "Meeting",
-                    userId: 1,
-                    barangId: 1,
-                    createdAt: new Date()
+                    destination: "Kantor",
                 },
                 {
                     status: "approved",
-                    category: "ruangan",
                     borrowedDate: new Date(),
                     estimatedTime: new Date(),
                     returnDate: new Date(),
                     objective: "Meeting",
-                    userId: 1,
-                    ruanganId: 1,
-                    createdAt: new Date()
+                    destination: "Kantor",
                 },
                 {
                     status: "rejected",
-                    category: "kendaraan",
                     borrowedDate: new Date(),
                     estimatedTime: new Date(),
                     returnDate: new Date(),
                     objective: "Meeting",
-                    destination: "Gedung IT",
-                    passenger: 10,
+                    destination: "Kantor",
+                },
+                {
+                    status: "returned",
+                    borrowedDate: new Date(),
+                    estimatedTime: new Date(),
+                    returnDate: new Date(),
+                    objective: "Meeting",
+                    destination: "Kantor",
+                },
+                {
+                    status: "canceled",
+                    borrowedDate: new Date(),
+                    estimatedTime: new Date(),
+                    returnDate: new Date(),
+                    objective: "Meeting",
+                    destination: "Kantor",  
+                }
+            ])
+
+        await db
+            .insert(peminjamans)
+            .values([
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 1,
+                    detailPeminjamanId: 1,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 2,
+                    detailPeminjamanId: 1,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
                     userId: 1,
                     kendaraanId: 1,
+                    detailPeminjamanId: 1,
+                    createdAt: new Date()
+                },
+                
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 3,
+                    detailPeminjamanId: 2,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 4,
+                    detailPeminjamanId: 2,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
+                    userId: 1,
+                    kendaraanId: 2,
+                    detailPeminjamanId: 2,
+                    createdAt: new Date()
+                },
+
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 5,
+                    detailPeminjamanId: 3,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 6,
+                    detailPeminjamanId: 3,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
+                    userId: 1,
+                    kendaraanId: 3,
+                    detailPeminjamanId: 3,
+                    createdAt: new Date()
+                },
+
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 7,
+                    detailPeminjamanId: 4,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 8,
+                    detailPeminjamanId: 4,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
+                    userId: 1,
+                    kendaraanId: 1,
+                    detailPeminjamanId: 4,
+                    createdAt: new Date()
+                },
+
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 9,
+                    detailPeminjamanId: 5,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 10,
+                    detailPeminjamanId: 5,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
+                    userId: 1,
+                    kendaraanId: 2,
+                    detailPeminjamanId: 5,
+                    createdAt: new Date()
+                },
+
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 11,
+                    detailPeminjamanId: 6,
+                    createdAt: new Date()
+                },
+                {
+                    category: "barang",
+                    userId: 1,
+                    barangId: 12,
+                    detailPeminjamanId: 6,
+                    createdAt: new Date()
+                },
+                {
+                    category: "kendaraan",
+                    userId: 1,
+                    kendaraanId: 3,
+                    detailPeminjamanId: 6,
                     createdAt: new Date()
                 },
             ])

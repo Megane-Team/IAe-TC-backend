@@ -1,5 +1,5 @@
 {
-  "id": "62915b24-ea01-428f-a6a7-d075e04ebb7b",
+  "id": "4b38edab-f063-45ad-b290-858dc8262426",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -91,6 +91,79 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.detailPeminjamans": {
+      "name": "detailPeminjamans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "detailPeminjamans_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "borrowed_date": {
+          "name": "borrowed_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_time": {
+          "name": "estimated_time",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_date": {
+          "name": "return_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "objective": {
+          "name": "objective",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "destination": {
+          "name": "destination",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "passenger": {
+          "name": "passenger",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -391,53 +464,10 @@
             "cycle": false
           }
         },
-        "status": {
-          "name": "status",
-          "type": "status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
         "category": {
           "name": "category",
           "type": "pcategory",
           "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "borrowed_date": {
-          "name": "borrowed_date",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "estimated_time": {
-          "name": "estimated_time",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "return_date": {
-          "name": "return_date",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "objective": {
-          "name": "objective",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "destination": {
-          "name": "destination",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "passenger": {
-          "name": "passenger",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -461,6 +491,12 @@
         },
         "kendaraan_id": {
           "name": "kendaraan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "detail_peminjaman_id": {
+          "name": "detail_peminjaman_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -520,6 +556,19 @@
           "tableTo": "kendaraans",
           "columnsFrom": [
             "kendaraan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "peminjamans_detail_peminjaman_id_detailPeminjamans_id_fk": {
+          "name": "peminjamans_detail_peminjaman_id_detailPeminjamans_id_fk",
+          "tableFrom": "peminjamans",
+          "tableTo": "detailPeminjamans",
+          "columnsFrom": [
+            "detail_peminjaman_id"
           ],
           "columnsTo": [
             "id"
@@ -854,6 +903,18 @@
     }
   },
   "enums": {
+    "public.status": {
+      "name": "status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "returned",
+        "canceled"
+      ]
+    },
     "public.kcategory": {
       "name": "kcategory",
       "schema": "public",
@@ -884,18 +945,6 @@
         "barang",
         "kendaraan",
         "ruangan"
-      ]
-    },
-    "public.status": {
-      "name": "status",
-      "schema": "public",
-      "values": [
-        "draft",
-        "pending",
-        "approved",
-        "rejected",
-        "returned",
-        "canceled"
       ]
     },
     "public.rcategory": {

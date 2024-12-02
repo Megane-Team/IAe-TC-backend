@@ -1,9 +1,10 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
-import { peminjamanCategory, peminjamans, peminjamanSchema, status } from "@/models/peminjamans.ts";
+import { detailPeminjamans } from "@/models/detailPeminjamans.ts";
+import { peminjamanCategory, peminjamans, peminjamanSchema} from "@/models/peminjamans.ts";
 import { db } from "@/modules/database.ts";
 import { getUser } from "@/utils/getUser.ts";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 
 export const prefix = "/peminjaman";
@@ -76,10 +77,26 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const peminjaman = await db
+        const detailPeminjaman = await db
             .select()
-            .from(peminjamans)
-            .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.status, status.enumValues[0])))
+            .from(detailPeminjamans)
+            .where(eq(detailPeminjamans.status, "draft"));
+
+        const detailPeminjamanIds = detailPeminjaman.map(dp => dp.id);
+
+        const peminjaman = await db
+        .select()
+        .from(peminjamans)
+        .where(
+            and(
+                eq(peminjamans.userId, actor.id),
+                or(
+                    eq(peminjamans.category, peminjamanCategory.enumValues[0]),
+                    eq(peminjamans.category, peminjamanCategory.enumValues[1])
+                ),
+                inArray(peminjamans.detailPeminjamanId, detailPeminjamanIds)
+            )
+        );
 
         if (!peminjaman) {
             return {
