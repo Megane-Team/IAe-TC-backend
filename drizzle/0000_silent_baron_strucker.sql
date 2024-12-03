@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "barangs" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "barangs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
 	"code" text NOT NULL,
-	"status" text NOT NULL,
+	"status" boolean DEFAULT false NOT NULL,
 	"condition" text NOT NULL,
 	"warranty" date NOT NULL,
 	"photo" text,
@@ -25,14 +25,15 @@ CREATE TABLE IF NOT EXISTS "detailPeminjamans" (
 	"return_date" timestamp with time zone,
 	"objective" text NOT NULL,
 	"destination" text,
-	"passenger" integer
+	"passenger" integer,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "kendaraans" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "kendaraans_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
 	"plat" text NOT NULL,
-	"status" text NOT NULL,
+	"status" boolean DEFAULT false NOT NULL,
 	"condition" text NOT NULL,
 	"warranty" date NOT NULL,
 	"capacity" integer NOT NULL,
@@ -81,7 +82,7 @@ CREATE TABLE IF NOT EXISTS "perangkats" (
 CREATE TABLE IF NOT EXISTS "ruangans" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "ruangans_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"code" text NOT NULL,
-	"status" text NOT NULL,
+	"status" boolean DEFAULT false NOT NULL,
 	"capacity" integer,
 	"category" "rcategory",
 	"photo" text,

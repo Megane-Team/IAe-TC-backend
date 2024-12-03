@@ -111,7 +111,7 @@ export const route = (instance: typeof server) => { instance
             // headers: z.object({
             //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             // }),
-            body: notifikasiSchema.insert.pick({ category: true }),
+            body: notifikasiSchema.insert.pick({ category: true, peminjamanId: true }),
             response: {
                 200: genericResponse(200),
                 401: genericResponse(401),
@@ -143,7 +143,7 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        var { category } = req.body;
+        var { category, peminjamanId } = req.body;
         
         var devicesToken = await db
             .select()
@@ -212,6 +212,7 @@ export const route = (instance: typeof server) => { instance
                 .values({
                     userId: user[0].id,
                     category: category,
+                    peminjamanId: peminjamanId,
                     isRead: false,
                 })
                 .execute();

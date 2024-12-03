@@ -9,10 +9,13 @@ import { z } from "zod";
 
 export const prefix = "/peminjaman";
 export const route = (instance: typeof server) => { instance
-    .get("/", {
+    .get("/:id", {
         schema: {
             description: "Get all peminjaman",
             tags: ["peminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
@@ -34,23 +37,46 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const peminjaman = await db
-            .select()
-            .from(peminjamans)
-            .where(eq(peminjamans.userId, actor.id))
+        const { id } = req.params;
+        const numId = parseInt(id);
 
-        if (!peminjaman) {
+        if (!numId) {
+            const peminjaman = await db
+                .select()
+                .from(peminjamans)
+                .where(eq(peminjamans.userId, actor.id))
+
+            if (!peminjaman) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
             return {
-                statusCode: 404,
-                message: "Not found"
+                statusCode: 200,
+                message: "Success",
+                data: peminjaman
             };
-        }
+        } else {
+            const peminjaman = await db
+                .select()
+                .from(peminjamans)
+                .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.id, numId)))
 
-        return {
-            statusCode: 200,
-            message: "Success",
-            data: peminjaman
-        };
+            if (!peminjaman) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
+            return {
+                statusCode: 200,
+                message: "Success",
+                data: peminjaman
+            }
+        }
     })
     .get("/draft", {
         schema: {

@@ -1,5 +1,5 @@
 {
-  "id": "4b38edab-f063-45ad-b290-858dc8262426",
+  "id": "4abd5d3e-5ba6-46f6-b252-2239b2b72a1e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -39,9 +39,10 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "condition": {
           "name": "condition",
@@ -160,6 +161,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -205,9 +213,10 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "condition": {
           "name": "condition",
@@ -676,9 +685,10 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "capacity": {
           "name": "capacity",
