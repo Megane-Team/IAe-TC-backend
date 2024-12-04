@@ -4,7 +4,7 @@ CREATE TYPE "public"."ncategory" AS ENUM('PB', 'PD', 'PG', 'PDB', 'PDT', 'JT', '
 CREATE TYPE "public"."pcategory" AS ENUM('barang', 'kendaraan', 'ruangan');--> statement-breakpoint
 CREATE TYPE "public"."rcategory" AS ENUM('kelas', 'lab', 'gudang');--> statement-breakpoint
 CREATE TYPE "public"."tcategory" AS ENUM('gedung', 'parkiran');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headAdmin');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headOffice');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "barangs" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "barangs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS "detailPeminjamans" (
 	"objective" text NOT NULL,
 	"destination" text,
 	"passenger" integer,
+	"user_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -116,6 +117,12 @@ CREATE TABLE IF NOT EXISTS "users" (
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "barangs" ADD CONSTRAINT "barangs_ruangan_id_ruangans_id_fk" FOREIGN KEY ("ruangan_id") REFERENCES "public"."ruangans"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "detailPeminjamans" ADD CONSTRAINT "detailPeminjamans_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

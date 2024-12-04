@@ -1,5 +1,5 @@
 {
-  "id": "4abd5d3e-5ba6-46f6-b252-2239b2b72a1e",
+  "id": "d4f27971-2636-4231-abaa-c0e82612cb2f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -162,6 +162,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -171,7 +177,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "detailPeminjamans_user_id_users_id_fk": {
+          "name": "detailPeminjamans_user_id_users_id_fk",
+          "tableFrom": "detailPeminjamans",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -980,7 +1000,7 @@
       "values": [
         "admin",
         "user",
-        "headAdmin"
+        "headOffice"
       ]
     }
   },

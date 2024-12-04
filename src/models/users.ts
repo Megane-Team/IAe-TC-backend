@@ -3,7 +3,7 @@ import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 import { z } from "zod"
 
-export const role = pgEnum('role', ['admin', 'user', 'headAdmin'])
+export const role = pgEnum('role', ['admin', 'user', 'headOffice'])
 export const users = pgTable("users", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),

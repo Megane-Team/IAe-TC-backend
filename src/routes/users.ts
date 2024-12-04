@@ -41,6 +41,60 @@ export const route = (instance: typeof server) => { instance
             data: actor
         };
     })
+    .get("/:id", {
+        schema: {
+            description: "Get user by id",
+            tags: ["users"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: userSchema.select.omit({ password: true })
+                })),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const user = await db.select().from(users).where(eq(users.id, numId)).execute();
+
+        if (user.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: user[0]
+        };
+    })
     .post("/login", {
         schema: {
             description: "Login user",
@@ -76,10 +130,10 @@ export const route = (instance: typeof server) => { instance
                 message: "Unauthorized"
             };
         }
+        const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
 
         const token = req.jwt.sign({ id: user[0].id }); 
 
-        const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
         
         if (perangkat.length === 0) {
             await db.insert(perangkats).values({
@@ -88,7 +142,7 @@ export const route = (instance: typeof server) => { instance
             })
         }
 
-        if (perangkat[0].id !== user[0].id) {
+        if (perangkat[0].userId !== user[0].id) {
             await db.update(perangkats).set({
                 userId: user[0].id
             }).where(eq(perangkats.deviceToken, deviceToken)).execute();    

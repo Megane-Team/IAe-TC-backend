@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { users } from "./users.ts";
 
 export const status = pgEnum('status', ['draft', 'pending', 'approved', 'rejected', 'returned', 'canceled'])
 export const detailPeminjamans = pgTable("detailPeminjamans", {
@@ -11,11 +12,12 @@ export const detailPeminjamans = pgTable("detailPeminjamans", {
     returnDate: timestamp({ withTimezone: true }),
     objective: text().notNull(),
     destination: text(),
-    passenger: integer(),
+    passenger: integer(),   
+    userId: integer().notNull().references(() => users.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
-export const detailPeminjamnSchema = {
+export const detailPeminjamanSchema = {
     insert: createInsertSchema(detailPeminjamans),
     select: createSelectSchema(detailPeminjamans)
 }
