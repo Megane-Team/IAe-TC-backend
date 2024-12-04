@@ -15,7 +15,7 @@ export const peminjamans = pgTable("peminjamans", {
     ruanganId: integer().references(() => ruangans.id),
     barangId: integer().references(() => barangs.id),
     kendaraanId: integer().references(() => kendaraans.id),
-    detailPeminjamanId: integer().references(() => detailPeminjamans.id),
+    detailPeminjamanId: integer().references(() => detailPeminjamans.id).notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
