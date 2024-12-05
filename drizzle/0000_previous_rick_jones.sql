@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "peminjamans" (
 	"ruangan_id" integer,
 	"barang_id" integer,
 	"kendaraan_id" integer,
-	"detail_peminjaman_id" integer,
+	"detail_peminjaman_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

@@ -181,4 +181,175 @@ export const route = (instance: typeof server) => { instance
             message: "Success"
         };
     }) 
+    .get('/ruangan/:id', {
+        schema: {
+            description: "Get peminjamam by ruangan id",
+            tags: ["peminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: peminjamanSchema.select
+                })),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(eq(peminjamans.ruanganId, numId))
+
+        if (!peminjaman) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: peminjaman[0]
+        }
+    })
+    .get('/barang/:id', {
+        schema: {
+            description: "Get peminjamam by barang id",
+            tags: ["peminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: peminjamanSchema.select
+                })),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(eq(peminjamans.barangId, numId))
+
+        if (!peminjaman) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: peminjaman[0]
+        }
+    })
+    .get('/kendaraan/:id', {
+        schema: {
+            description: "Get peminjamam by kendaraan id",
+            tags: ["peminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: peminjamanSchema.select
+                })),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(eq(peminjamans.kendaraanId, numId))
+
+        if (!peminjaman) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: peminjaman[0]
+        }
+    })
 }

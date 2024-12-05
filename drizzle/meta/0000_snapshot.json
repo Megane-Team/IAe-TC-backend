@@ -1,5 +1,5 @@
 {
-  "id": "d4f27971-2636-4231-abaa-c0e82612cb2f",
+  "id": "134eb40a-dfe8-4b8a-98c8-ba553860d52c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -528,7 +528,7 @@
           "name": "detail_peminjaman_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",

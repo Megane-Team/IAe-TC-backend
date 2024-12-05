@@ -17,7 +17,7 @@ export const route = (instance: typeof server) => { instance
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(detailPeminjamanSchema.select)
+                    data: detailPeminjamanSchema.select
                 })),
                 401: genericResponse(401),
                 404: genericResponse(404)
@@ -55,6 +55,63 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Success",
             data: detailPeminjaman
+        };
+    })
+    .get("/:id", {
+        schema: {
+            description: "get DetailPeminjaman by Id",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: detailPeminjamanSchema.select
+                })),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(eq(detailPeminjamans.id, numId))
+            .execute();
+
+        if (detailPeminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: detailPeminjaman[0]
         };
     })
 }
