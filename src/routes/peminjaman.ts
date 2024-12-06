@@ -1,7 +1,10 @@
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
+import { barangs } from "@/models/barangs.ts";
 import { detailPeminjamans } from "@/models/detailPeminjamans.ts";
+import { kendaraans } from "@/models/kendaraans.ts";
 import { peminjamanCategory, peminjamans, peminjamanSchema} from "@/models/peminjamans.ts";
+import { ruangans } from "@/models/ruangans.ts";
 import { db } from "@/modules/database.ts";
 import { getUser } from "@/utils/getUser.ts";
 import { and, eq, inArray, or } from "drizzle-orm";
@@ -106,7 +109,7 @@ export const route = (instance: typeof server) => { instance
         const detailPeminjaman = await db
             .select()
             .from(detailPeminjamans)
-            .where(eq(detailPeminjamans.status, "draft"));
+            .where(and(eq(detailPeminjamans.userId, actor.id), eq(detailPeminjamans.status, "draft")));
 
         const detailPeminjamanIds = detailPeminjaman.map(dp => dp.id);
 
@@ -183,7 +186,7 @@ export const route = (instance: typeof server) => { instance
     }) 
     .get('/ruangan/:id', {
         schema: {
-            description: "Get peminjamam by ruangan id",
+            description: "Get peminjaman by ruangan id",
             tags: ["peminjaman"],
             params: z.object({
                 id: z.string()
@@ -350,6 +353,105 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Success",
             data: peminjaman[0]
+        }
+    })
+    .post('/', {
+        schema: {
+            description: 'Create a peminjaman',
+            tags: ["peminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: peminjamanSchema.insert.omit({ id: true, createdAt: true, userId: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                429: genericResponse(429)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            }
+        }
+
+        const { category, ruanganId, barangId, kendaraanId, detailPeminjamanId} = req.body
+
+        // check if detailPeminjamanId is pending
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(and(eq(detailPeminjamans.userId, actor.id), eq(detailPeminjamans.id, detailPeminjamanId)))
+        
+        if (!detailPeminjaman) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            }
+        }
+
+        if (detailPeminjaman[0].status === "pending") {
+            const updateStatus = async (table: any, id: number | undefined | null) => {
+            if (!id) {
+                return {
+                statusCode: 400,
+                message: "Bad request"
+                };
+            }
+            await db.update(table).set({ status: true }).where(eq(table.id, id));
+            };
+
+            if (category === peminjamanCategory.enumValues[0]) {
+                return await updateStatus(barangs, barangId);
+            } else if (category === peminjamanCategory.enumValues[1]) {
+                return await updateStatus(kendaraans, kendaraanId);
+            } else if (category === peminjamanCategory.enumValues[2]) {
+                return await updateStatus(ruangans, ruanganId);
+            }
+        }
+        
+        if (['draft', 'pending'].includes(detailPeminjaman[0].status)) {
+            let peminjaman;
+            if (category === 'barang') {
+                peminjaman = await db.select()
+                    .from(peminjamans)
+                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.barangId, barangId!)));
+            } else if (category === 'kendaraan') {
+                peminjaman = await db.select()
+                    .from(peminjamans)
+                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.kendaraanId, kendaraanId!)));
+            } else if (category === 'ruangan') {
+                peminjaman = await db.select()
+                    .from(peminjamans)
+                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.ruanganId, ruanganId!)));
+            }
+        
+            if (peminjaman && peminjaman.length > 0) {
+                return {
+                    statusCode: 429,
+                    message: 'duplicate request'
+                };
+            }
+        }
+
+        await db.insert(peminjamans).values({
+            category,
+            userId: actor.id,
+            ruanganId,
+            barangId,
+            kendaraanId,
+            detailPeminjamanId,
+            createdAt: new Date()
+        })
+
+        return {
+            statusCode: 200,
+            message: "Success"
         }
     })
 }

@@ -90,7 +90,7 @@ export const route = (instance: typeof server) => { instance
                 {
                     name: "Laptop",
                     code: "002",
-                    status: true,
+                    status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
                     createdAt: new Date(),
@@ -99,7 +99,7 @@ export const route = (instance: typeof server) => { instance
                 {
                     name: "Handphone",
                     code: "002",
-                    status: true,
+                    status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
                     createdAt: new Date(),
@@ -204,7 +204,7 @@ export const route = (instance: typeof server) => { instance
                     category: "ruangan",
                     userId: 1,
                     ruanganId: 2,
-                    detailPeminjamanId: 1,
+                    detailPeminjamanId: 3,
                     createdAt: new Date(),
                 },
             ])

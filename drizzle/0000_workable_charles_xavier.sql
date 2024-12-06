@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS "detailPeminjamans" (
 	"borrowed_date" timestamp with time zone,
 	"estimated_time" timestamp with time zone,
 	"return_date" timestamp with time zone,
-	"objective" text NOT NULL,
+	"objective" text,
 	"destination" text,
 	"passenger" integer,
 	"user_id" integer NOT NULL,

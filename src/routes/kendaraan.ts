@@ -8,15 +8,12 @@ import { z } from "zod";
 
 export const prefix = "/kendaraans";
 export const route = (instance: typeof server) => { instance
-    .get("/:id", {
+    .get("/", {
         schema: {
-            description: "get kendaraan",
+            description: "get all kendaraan",
             tags: ["kendaraans"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            params: z.object({
-                id: z.string()
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
@@ -36,32 +33,58 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const { id } = req.params;
-        const numberId = parseInt(id);
-
-        if (!id) {
-            const res = await db
+        const res = await db
                 .select()
                 .from(kendaraans)
                 .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
+        } 
+    })
+    .get("/:id", {
+        schema: {
+            description: "get kendaraan",
+            tags: ["kendaraans"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                id: z.string()
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: kendaraanSchema.select.omit({ createdAt: true })
+                })),
+
+                401: genericResponse(401)
             }
-        } else {
-            const res = await db
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params;
+        const numberId = parseInt(id);
+
+        const res = await db
                 .select()
                 .from(kendaraans)
                 .where(eq(kendaraans.id, numberId))
                 .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
-        } 
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res[0]
+        }
     })
 }

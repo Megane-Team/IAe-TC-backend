@@ -10,7 +10,7 @@ export const detailPeminjamans = pgTable("detailPeminjamans", {
     borrowedDate: timestamp({ withTimezone: true }),
     estimatedTime: timestamp({ withTimezone: true }),   
     returnDate: timestamp({ withTimezone: true }),
-    objective: text().notNull(),
+    objective: text(),
     destination: text(),
     passenger: integer(),   
     userId: integer().notNull().references(() => users.id),

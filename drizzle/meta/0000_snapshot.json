@@ -1,5 +1,5 @@
 {
-  "id": "134eb40a-dfe8-4b8a-98c8-ba553860d52c",
+  "id": "ca13f78b-2f1d-4b9f-99b3-ea6e6b56bb40",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -148,7 +148,7 @@
           "name": "objective",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "destination": {
           "name": "destination",

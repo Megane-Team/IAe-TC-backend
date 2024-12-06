@@ -94,6 +94,13 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
         const numberId = parseInt(id);
 
+        if (!numberId) {
+            return {
+                message: "Not found",
+                statusCode: 404
+            }
+        }
+
         const res = await db
             .select()
             .from(barangs)
