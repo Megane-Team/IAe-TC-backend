@@ -1,5 +1,5 @@
 {
-  "id": "ca13f78b-2f1d-4b9f-99b3-ea6e6b56bb40",
+  "id": "2bed60bb-be46-4991-9189-f14ba45b4f8d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -31,8 +31,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "code": {
-          "name": "code",
+        "activa_code": {
+          "name": "activa_code",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -168,6 +168,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "canceled_reason": {
+          "name": "canceled_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -266,6 +272,12 @@
         "color": {
           "name": "color",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax": {
+          "name": "tax",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
@@ -423,8 +435,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "peminjaman_id": {
-          "name": "peminjaman_id",
+        "detail_peminjaman_id": {
+          "name": "detail_peminjaman_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -452,12 +464,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "notifikasis_peminjaman_id_peminjamans_id_fk": {
-          "name": "notifikasis_peminjaman_id_peminjamans_id_fk",
+        "notifikasis_detail_peminjaman_id_detailPeminjamans_id_fk": {
+          "name": "notifikasis_detail_peminjaman_id_detailPeminjamans_id_fk",
           "tableFrom": "notifikasis",
-          "tableTo": "peminjamans",
+          "tableTo": "detailPeminjamans",
           "columnsFrom": [
-            "peminjaman_id"
+            "detail_peminjaman_id"
           ],
           "columnsTo": [
             "id"

@@ -71,7 +71,7 @@ export const route = (instance: typeof server) => { instance
             .values([
                 {
                     name: "Laptop",
-                    code: "001",
+                    activaCode: "001",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -80,7 +80,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Handphone",
-                    code: "001",
+                    activaCode: "001",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -89,7 +89,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Laptop",
-                    code: "002",
+                    activaCode: "002",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -98,7 +98,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Handphone",
-                    code: "002",
+                    activaCode: "002",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -119,6 +119,7 @@ export const route = (instance: typeof server) => { instance
                     category: "mobil",
                     color: "Red",
                     createdAt: new Date(),
+                    tax: new Date().toISOString(),
                     tempatId: 2,
                 },
                 {
@@ -130,6 +131,7 @@ export const route = (instance: typeof server) => { instance
                     category: "motor",
                     color: "Red",
                     createdAt: new Date(),
+                    tax: new Date().toISOString(),
                     tempatId: 2,
                 },
                 {
@@ -142,6 +144,7 @@ export const route = (instance: typeof server) => { instance
                     category: "mobil",
                     color: "Red",
                     createdAt: new Date(),
+                    tax: new Date().toISOString(),
                     tempatId: 2,
                 },
             ])

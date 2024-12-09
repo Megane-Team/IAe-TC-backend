@@ -14,6 +14,7 @@ export const kendaraans = pgTable("kendaraans", {
     capacity: integer().notNull(),  
     category: kendaraanCategory(),
     color: text().notNull(),
+    tax: date().notNull(),
     photo: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
     tempatId: integer().notNull().references(() => tempats.id)

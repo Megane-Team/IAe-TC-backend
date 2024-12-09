@@ -6,7 +6,7 @@ import { ruangans } from "./ruangans.ts";
 export const barangs = pgTable("barangs", {
     id: integer().generatedAlwaysAsIdentity().primaryKey(),
     name: text().notNull(),
-    code: text().notNull(),
+    activaCode: text().notNull(),
     status: boolean().notNull().default(false),
     condition: text().notNull(),
     warranty: date().notNull(),

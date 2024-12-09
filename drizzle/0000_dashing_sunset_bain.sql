@@ -8,7 +8,7 @@ CREATE TYPE "public"."role" AS ENUM('admin', 'user', 'headOffice');--> statement
 CREATE TABLE IF NOT EXISTS "barangs" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "barangs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
-	"code" text NOT NULL,
+	"activa_code" text NOT NULL,
 	"status" boolean DEFAULT false NOT NULL,
 	"condition" text NOT NULL,
 	"warranty" date NOT NULL,
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS "detailPeminjamans" (
 	"destination" text,
 	"passenger" integer,
 	"user_id" integer NOT NULL,
+	"canceled_reason" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS "kendaraans" (
 	"capacity" integer NOT NULL,
 	"category" "kcategory",
 	"color" text NOT NULL,
+	"tax" date NOT NULL,
 	"photo" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"tempat_id" integer NOT NULL,
@@ -58,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "notifikasis" (
 	"category" "ncategory",
 	"is_read" boolean DEFAULT false NOT NULL,
 	"user_id" integer NOT NULL,
-	"peminjaman_id" integer NOT NULL,
+	"detail_peminjaman_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -146,7 +148,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "notifikasis" ADD CONSTRAINT "notifikasis_peminjaman_id_peminjamans_id_fk" FOREIGN KEY ("peminjaman_id") REFERENCES "public"."peminjamans"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "notifikasis" ADD CONSTRAINT "notifikasis_detail_peminjaman_id_detailPeminjamans_id_fk" FOREIGN KEY ("detail_peminjaman_id") REFERENCES "public"."detailPeminjamans"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

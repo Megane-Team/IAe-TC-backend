@@ -14,6 +14,7 @@ export const detailPeminjamans = pgTable("detailPeminjamans", {
     destination: text(),
     passenger: integer(),   
     userId: integer().notNull().references(() => users.id),
+    canceledReason: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`)
 })
 
