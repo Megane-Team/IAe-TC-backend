@@ -10,9 +10,44 @@ import { z } from "zod";
 
 export const prefix = "/tempats";
 export const route = (instance: typeof server) => { instance
+    .get("/", {
+        schema: {
+            description: "get all tempat",
+            tags: ["tempats"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(tempatSchema.select.omit({ createdAt: true }))
+                })),
+
+                401: genericResponse(401)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+        const res = await db
+            .select()
+            .from(tempats)
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
+        }
+    })
     .get("/:id", {
         schema: {
-            description: "get tempat",
+            description: "get tempat by id",
             tags: ["tempats"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -41,19 +76,7 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
         const numberId = parseInt(id);
 
-        if (!id) {
-            const res = await db
-                .select()
-                .from(tempats)
-                .execute();
-
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
-        } else {
-            const res = await db
+        const res = await db
                 .select()
                 .from(tempats)
                 .where(eq(tempats.id, numberId))
@@ -64,7 +87,6 @@ export const route = (instance: typeof server) => { instance
                 message: "Success",
                 data: res
             }
-        }
     })
     .get('/:id/ruangans', {
         schema: {

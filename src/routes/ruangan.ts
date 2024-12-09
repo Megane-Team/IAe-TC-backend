@@ -9,6 +9,41 @@ import { z } from "zod";
 
 export const prefix = '/ruangans';
 export const route = (instance: typeof server) => { instance
+    .get("/" , {
+        schema: {
+            description: "Get ruangans",
+            tags: ['Ruangan'],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(ruanganSchema.select.omit({ createdAt: true }))
+                })),
+                401: genericResponse(401),
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance);
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const res = await db
+            .select()
+            .from(ruangans)
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
+        }
+    })
     .get("/:id" , {
         schema: {
             description: "Get ruangans",
@@ -39,29 +74,16 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
         const numberId = parseInt(id);
 
-        if (!id) {
-            const res = await db
-                .select()
-                .from(ruangans)
-                .execute();
-
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
-        } else {
-            const res = await db
+        const res = await db
                 .select()
                 .from(ruangans)
                 .where(eq(ruangans.id, numberId))
                 .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
         }
     })
     .get('/:id/barangs', {
