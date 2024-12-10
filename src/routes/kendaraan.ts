@@ -46,7 +46,7 @@ export const route = (instance: typeof server) => { instance
     })
     .get("/:id", {
         schema: {
-            description: "get kendaraan",
+            description: "get kendaraan by id",
             tags: ["kendaraans"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))

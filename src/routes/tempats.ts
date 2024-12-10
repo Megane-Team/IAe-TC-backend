@@ -57,7 +57,7 @@ export const route = (instance: typeof server) => { instance
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(tempatSchema.select.omit({ createdAt: true }))
+                    data: tempatSchema.select.omit({ createdAt: true })
                 })),
 
                 401: genericResponse(401)
@@ -82,11 +82,11 @@ export const route = (instance: typeof server) => { instance
                 .where(eq(tempats.id, numberId))
                 .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res[0]
+        }
     })
     .get('/:id/ruangans', {
         schema: {

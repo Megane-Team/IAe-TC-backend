@@ -11,7 +11,7 @@ export const prefix = '/ruangans';
 export const route = (instance: typeof server) => { instance
     .get("/" , {
         schema: {
-            description: "Get ruangans",
+            description: "Get all ruangans",
             tags: ['Ruangan'],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -56,7 +56,7 @@ export const route = (instance: typeof server) => { instance
             }),
             response: {
                 200: genericResponse(200).merge(z.object({
-                    data: z.array(ruanganSchema.select.omit({ createdAt: true }))
+                    data: ruanganSchema.select.omit({ createdAt: true })
                 })),
                 401: genericResponse(401),
             }
@@ -83,7 +83,7 @@ export const route = (instance: typeof server) => { instance
         return {
             statusCode: 200,
             message: "Success",
-            data: res
+            data: res[0]
         }
     })
     .get('/:id/barangs', {
