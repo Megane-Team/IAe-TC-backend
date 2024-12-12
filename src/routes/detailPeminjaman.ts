@@ -356,4 +356,121 @@ export const route = (instance: typeof server) => { instance
             message: "Success",
         }
     })
+    .patch("/:id/canceled", {
+        schema: {
+            description: "Update detailPeminjaman to canceled",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: detailPeminjamanSchema.insert.pick({ canceledReason: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        if (!numId) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const { canceledReason } = req.body
+
+        const dp = await db.select()
+            .from(detailPeminjamans)
+            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+
+        if (dp.length === 0) {
+            return {
+                message: "Not found",
+                statusCode: 404
+            }
+        }
+
+        await db.update(detailPeminjamans)
+            .set({
+                status: 'canceled',
+                canceledReason
+            })
+            .where(eq(detailPeminjamans.id, numId))
+            .execute()
+
+        return {
+            statusCode: 200,
+            message: "Success",
+        }
+    })
+    .patch('/:id/returned', {
+        schema: {
+            description: 'update detailPeminjaman status to returned',
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        const dp = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+
+        if (!dp) {
+            return {
+                statusCode: 400,
+                message: "bad request"
+            }
+        }
+
+        await db.update(detailPeminjamans)
+            .set({
+                status: 'returned',
+            })
+            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+            .execute()
+
+        return {
+            statusCode: 200,
+            message: 'Success'
+        }
+    })
 }
