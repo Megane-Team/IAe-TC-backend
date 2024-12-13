@@ -243,7 +243,7 @@ export const route = (instance: typeof server) => { instance
     })
     .get('/barang/:id', {
         schema: {
-            description: "Get peminjamam by barang id",
+            description: "Get peminjaman by barang id",
             tags: ["peminjaman"],
             params: z.object({
                 id: z.string()
@@ -285,7 +285,7 @@ export const route = (instance: typeof server) => { instance
             .from(peminjamans)
             .where(eq(peminjamans.barangId, numId))
 
-        if (!peminjaman) {
+        if (peminjaman.length === 0) {
             return {
                 statusCode: 404,
                 message: "Not found"
@@ -406,11 +406,11 @@ export const route = (instance: typeof server) => { instance
             };
 
             if (category === peminjamanCategory.enumValues[0]) {
-                return await updateStatus(barangs, barangId);
+                await updateStatus(barangs, barangId);
             } else if (category === peminjamanCategory.enumValues[1]) {
-                return await updateStatus(kendaraans, kendaraanId);
+                await updateStatus(kendaraans, kendaraanId);
             } else if (category === peminjamanCategory.enumValues[2]) {
-                return await updateStatus(ruangans, ruanganId);
+                await updateStatus(ruangans, ruanganId);
             }
         }
         
