@@ -1,5 +1,5 @@
 {
-  "id": "2bed60bb-be46-4991-9189-f14ba45b4f8d",
+  "id": "74ed6399-b79d-4df4-a9f9-753d6b504d02",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -31,8 +31,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "activa_code": {
-          "name": "activa_code",
+        "code": {
+          "name": "code",
           "type": "text",
           "primaryKey": false,
           "notNull": true

@@ -71,7 +71,7 @@ export const route = (instance: typeof server) => { instance
             .values([
                 {
                     name: "Laptop",
-                    activaCode: "001",
+                    code: "001",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -80,7 +80,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Handphone",
-                    activaCode: "001",
+                    code: "001",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -89,7 +89,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Laptop",
-                    activaCode: "002",
+                    code: "002",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
@@ -98,7 +98,7 @@ export const route = (instance: typeof server) => { instance
                 },
                 {
                     name: "Handphone",
-                    activaCode: "002",
+                    code: "002",
                     status: false,
                     condition: "bagus",
                     warranty: new Date().toISOString(),
