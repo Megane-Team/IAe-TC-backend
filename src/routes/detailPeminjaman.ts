@@ -1,7 +1,10 @@
 import { genericResponse } from "@/constants.ts"
 import { server } from "@/index.ts"
+import { barangs } from "@/models/barangs.ts"
 import { detailPeminjamans, detailPeminjamanSchema } from "@/models/detailPeminjamans.ts"
+import { kendaraans } from "@/models/kendaraans.ts"
 import { peminjamans, peminjamanSchema } from "@/models/peminjamans.ts"
+import { ruangans } from "@/models/ruangans.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
 import { and, eq, or } from "drizzle-orm"
@@ -265,7 +268,11 @@ export const route = (instance: typeof server) => { instance
             .from(detailPeminjamans)
             .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))
 
-        if (!dp) {
+        console.log(dp)
+
+        if (dp.length === 0) {
+
+            console.log('dp is null')
             await db.insert(detailPeminjamans).values({
                 status,
                 userId: actor.id,
@@ -351,6 +358,35 @@ export const route = (instance: typeof server) => { instance
             .where(eq(detailPeminjamans.id, numId))
             .execute()
 
+        const peminjaman = await db.select()
+            .from(peminjamans)
+            .where(eq(peminjamans.detailPeminjamanId, numId))
+            .execute()
+            
+        for (const p of peminjaman) {
+            if (p.category == "barang") {
+                await db.update(barangs)
+                    .set({
+                        status: true
+                    })
+                    .where(eq(barangs.id, p.barangId!))
+            }
+            if (p.category == "kendaraan") {
+                await db.update(kendaraans)
+                    .set({
+                        status: true
+                    })
+                    .where(eq(kendaraans.id, p.kendaraanId!))
+            }
+            if (p.category == "ruangan") {
+                await db.update(ruangans)
+                    .set({
+                        status: true
+                    })
+                    .where(eq(ruangans.id, p.ruanganId!))
+            }
+        }
+
         return {
             statusCode: 200,
             message: "Success",
@@ -420,15 +456,14 @@ export const route = (instance: typeof server) => { instance
             message: "Success",
         }
     })
-    .patch('/:id/returned', {
+    .patch('/returned', {
         schema: {
             description: 'update detailPeminjaman status to returned',
-            params: z.object({
-                id: z.string()
-            }),
+            tags: ["detailPeminjaman"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
+            body: detailPeminjamanSchema.insert.pick({ id: true }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
@@ -446,13 +481,19 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        const { id } = req.params
-        const numId = parseInt(id)
+        const { id } = req.body
+
+        if (!id) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
 
         const dp = await db
             .select()
             .from(detailPeminjamans)
-            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
 
         if (!dp) {
             return {
@@ -465,7 +506,7 @@ export const route = (instance: typeof server) => { instance
             .set({
                 status: 'returned',
             })
-            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
             .execute()
 
         return {

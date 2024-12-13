@@ -98,7 +98,7 @@ export const route = (instance: typeof server) => { instance
     .post("/login", {
         schema: {
             description: "Login user",
-            tags: ["login"],
+            tags: ["users"],
             body: userSchema.select.pick({ email: true, password: true }).merge(z.object({
                 deviceToken: z.string()
             })),
@@ -163,7 +163,7 @@ export const route = (instance: typeof server) => { instance
     .post("/register", {
         schema: {
             description: "Register user",
-            tags: ["register"],
+            tags: ["users"],
             body: userSchema.insert.omit({ createdAt: true, id: true }),
             response: {
                 200: genericResponse(200),

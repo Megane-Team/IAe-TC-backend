@@ -381,8 +381,7 @@ export const route = (instance: typeof server) => { instance
         }
 
         const { category, ruanganId, barangId, kendaraanId, detailPeminjamanId} = req.body
-
-        // check if detailPeminjamanId is pending
+        
         const detailPeminjaman = await db
             .select()
             .from(detailPeminjamans)
@@ -397,13 +396,13 @@ export const route = (instance: typeof server) => { instance
 
         if (detailPeminjaman[0].status === "pending") {
             const updateStatus = async (table: any, id: number | undefined | null) => {
-            if (!id) {
-                return {
-                statusCode: 400,
-                message: "Bad request"
-                };
-            }
-            await db.update(table).set({ status: true }).where(eq(table.id, id));
+                if (!id) {
+                    return {
+                    statusCode: 400,
+                    message: "Bad request"
+                    };
+                }
+                await db.update(table).set({ status: true }).where(eq(table.id, id));
             };
 
             if (category === peminjamanCategory.enumValues[0]) {
