@@ -3,7 +3,9 @@ import { server } from "@/index.ts"
 import { barangs } from "@/models/barangs.ts"
 import { detailPeminjamans, detailPeminjamanSchema } from "@/models/detailPeminjamans.ts"
 import { kendaraans } from "@/models/kendaraans.ts"
+import { logs } from "@/models/logs.ts"
 import { peminjamans, peminjamanSchema } from "@/models/peminjamans.ts"
+import { perangkats } from "@/models/perangkat.ts"
 import { ruangans } from "@/models/ruangans.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
@@ -230,6 +232,14 @@ export const route = (instance: typeof server) => { instance
              .from(detailPeminjamans)
              .where(and(eq(detailPeminjamans.borrowedDate, borrowedDate), eq(detailPeminjamans.userId, actor.id)))
 
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: "Loan items",
+            createdAt: new Date()
+        }).execute();
+             
+        // TODO: send notification to admin
+        
         return {
             statusCode: 200,
             message: "Success",
@@ -267,8 +277,6 @@ export const route = (instance: typeof server) => { instance
         var dp = await db.select()
             .from(detailPeminjamans)
             .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))
-
-        console.log(dp)
 
         if (dp.length === 0) {
 
@@ -387,6 +395,14 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: "Loan items",
+            createdAt: new Date()
+        }).execute();
+
+        // TODO: send notification to admin
+
         return {
             statusCode: 200,
             message: "Success",
@@ -443,6 +459,41 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
+        const peminjaman = await db.select()
+            .from(peminjamans)
+            .where(eq(peminjamans.detailPeminjamanId, numId))
+            .execute()
+            
+        for (const p of peminjaman) {
+            if (p.category == "barang") {
+                await db.update(barangs)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(barangs.id, p.barangId!))
+            }
+            if (p.category == "kendaraan") {
+                await db.update(kendaraans)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(kendaraans.id, p.kendaraanId!))
+            }
+            if (p.category == "ruangan") {
+                await db.update(ruangans)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(ruangans.id, p.ruanganId!))
+            }
+        }
+
+        await db.insert(logs).values({
+                    userId: actor.id,
+                    action: "Canceled the loan",
+                    createdAt: new Date()
+                }).execute();
+
         await db.update(detailPeminjamans)
             .set({
                 status: 'canceled',
@@ -490,6 +541,12 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: "Returned the loan",
+            createdAt: new Date()
+        }).execute();
+
         const dp = await db
             .select()
             .from(detailPeminjamans)
@@ -502,9 +559,104 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
+        const peminjaman = await db.select()
+            .from(peminjamans)
+            .where(eq(peminjamans.detailPeminjamanId, id))
+            .execute()
+            
+        for (const p of peminjaman) {
+            if (p.category == "barang") {
+                await db.update(barangs)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(barangs.id, p.barangId!))
+            }
+            if (p.category == "kendaraan") {
+                await db.update(kendaraans)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(kendaraans.id, p.kendaraanId!))
+            }
+            if (p.category == "ruangan") {
+                await db.update(ruangans)
+                    .set({
+                        status: false
+                    })
+                    .where(eq(ruangans.id, p.ruanganId!))
+            }
+        }
+
         await db.update(detailPeminjamans)
             .set({
                 status: 'returned',
+            })
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
+            .execute()
+
+        return {
+            statusCode: 200,
+            message: 'Success'
+        }
+    })
+    .patch('/approved', {
+        schema: {
+            description: 'update detailPeminjaman status to approved',
+            tags: ["detailPeminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: detailPeminjamanSchema.insert.pick({ id: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { id } = req.body
+
+        if (!id) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const dp = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
+
+        if (!dp) {
+            return {
+                statusCode: 400,
+                message: "bad request"
+            }
+        }
+
+        // TODO: send notification to user
+
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: "Accepted the loan request",
+            createdAt: new Date()
+        }).execute();
+
+        await db.update(detailPeminjamans)
+            .set({
+                status: 'approved',
             })
             .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
             .execute()

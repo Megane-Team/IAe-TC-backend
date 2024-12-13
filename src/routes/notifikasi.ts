@@ -9,6 +9,46 @@ import { eq } from "drizzle-orm";
 import { getMessaging } from "firebase-admin/messaging";
 import { z } from "zod";
 
+export const getNotificationTitleMessage = (kategori: string): string => {
+    switch (kategori) {
+        case 'PB':
+            return 'Peminjaman berhasil';
+        case 'PD':
+            return 'Peminjaman dikonfirmasi!';
+        case 'PG':
+            return 'Peminjaman gagal!';
+        case 'PDB':
+            return 'Peminjaman telah dibatalkan';
+        case 'PDT':
+            return 'Peminjaman ditolak!';
+        case 'JT':
+            return 'Waktu peminjaman akan segera berakhir!';
+        case 'DO':
+            return 'Peminjaman dibatalkan otomatis!';
+        default:
+            return 'Notifikasi tidak dikenal';
+    }
+};
+export const getNotificationMessage = (kategori: string): string => {
+    switch (kategori) {
+        case 'PB':
+            return 'Kamu berhasil mengajukan peminjaman!';
+        case 'PD':
+            return 'Peminjaman mu telah di konfirmasi!';
+        case 'PG':
+            return 'Pengajuan peminjaman mu gagal coba lagi nanti!';
+        case 'PDB':
+            return 'Kamu berhasil membatalkan pengajuan peminjamanmu!';
+        case 'PDT':
+            return 'Pengajuan peminjaman mu ditolak!';
+        case 'JT':
+            return 'Peminjaman mu sebentar lagi berakhir jangan lupa untuk mengembalikanya!';
+        case 'DO':
+            return 'Pengajuan peminjaman telah dibatalkan secara otomatis!';
+        default:
+            return 'Notifikasi tidak dikenal';
+    }
+};
 export const prefix = "/notifikasi";
 export const route = (instance: typeof server) => { instance
     .get("/", {
@@ -108,9 +148,6 @@ export const route = (instance: typeof server) => { instance
             params: z.object({
                 id: z.string()
             }),
-            // headers: z.object({
-            //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            // }),
             body: notifikasiSchema.insert.pick({ category: true, detailPeminjamanId: true }),
             response: {
                 200: genericResponse(200),
@@ -119,15 +156,6 @@ export const route = (instance: typeof server) => { instance
             }
         }
     }, async (req) => {
-        // const actor = await getUser(req.headers["authorization"], instance);
-
-        // if (!actor) {
-        //     return {
-        //         statusCode: 401,
-        //         message: "Unauthorized"
-        //     };
-        // }
-
         const { id } = req.params;
         const numId = parseInt(id);
 
@@ -156,48 +184,6 @@ export const route = (instance: typeof server) => { instance
                 message: "Not found"
             };
         }
-
-        const getNotificationMessage = (kategori: string): string => {
-            switch (kategori) {
-                case 'PB':
-                    return 'Kamu berhasil mengajukan peminjaman!';
-                case 'PD':
-                    return 'Peminjaman mu telah di konfirmasi!';
-                case 'PG':
-                    return 'Pengajuan peminjaman mu gagal coba lagi nanti!';
-                case 'PDB':
-                    return 'Kamu berhasil membatalkan pengajuan peminjamanmu!';
-                case 'PDT':
-                    return 'Pengajuan peminjaman mu ditolak!';
-                case 'JT':
-                    return 'Peminjaman mu sebentar lagi berakhir jangan lupa untuk mengembalikanya!';
-                case 'DO':
-                    return 'Pengajuan peminjaman telah dibatalkan secara otomatis!';
-                default:
-                    return 'Notifikasi tidak dikenal';
-            }
-        };
-
-        const getNotificationTitleMessage = (kategori: string): string => {
-            switch (kategori) {
-                case 'PB':
-                    return 'Peminjaman berhasil';
-                case 'PD':
-                    return 'Peminjaman dikonfirmasi!';
-                case 'PG':
-                    return 'Peminjaman gagal!';
-                case 'PDB':
-                    return 'Peminjaman telah dibatalkan';
-                case 'PDT':
-                    return 'Peminjaman ditolak!';
-                case 'JT':
-                    return 'Waktu peminjaman akan segera berakhir!';
-                case 'DO':
-                    return 'Peminjaman dibatalkan otomatis!';
-                default:
-                    return 'Notifikasi tidak dikenal';
-            }
-        };
 
         devicesToken.forEach((device) => {
             const messages = {
