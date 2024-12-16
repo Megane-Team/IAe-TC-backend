@@ -228,7 +228,7 @@ export const route = (instance: typeof server) => { instance
             .from(peminjamans)
             .where(eq(peminjamans.ruanganId, numId))
 
-        if (!peminjaman) {
+        if (peminjaman.length === 0) {
             return {
                 statusCode: 404,
                 message: "Not found"

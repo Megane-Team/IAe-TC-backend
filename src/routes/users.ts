@@ -133,7 +133,6 @@ export const route = (instance: typeof server) => { instance
         const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
 
         const token = req.jwt.sign({ id: user[0].id }); 
-
         
         if (perangkat.length === 0) {
             await db.insert(perangkats).values({
@@ -142,7 +141,7 @@ export const route = (instance: typeof server) => { instance
             })
         }
 
-        if (perangkat[0].userId !== user[0].id) {
+        if (await perangkat[0].userId !== user[0].id) {
             await db.update(perangkats).set({
                 userId: user[0].id
             }).where(eq(perangkats.deviceToken, deviceToken)).execute();    
