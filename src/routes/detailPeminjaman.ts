@@ -9,7 +9,7 @@ import { perangkats } from "@/models/perangkat.ts"
 import { ruangans } from "@/models/ruangans.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
-import { and, eq, or } from "drizzle-orm"
+import { and, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
 
 export const prefix = '/detailPeminjaman'
@@ -214,8 +214,6 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        // for every detailPeminjaman, check if the borrowedDate is passed
-
         for (const dp of detailPeminjaman) {
             if (dp.borrowedDate! < new Date()) {
                 const peminjaman = await db
@@ -254,6 +252,289 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Success",
         };
+    })
+    .get('/all/barang/:id', {
+        schema: {
+            description: "Get all detailPeminjaman by barang id",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(detailPeminjamanSchema.select)
+                })),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(and(eq(peminjamans.barangId, numId), eq(peminjamans.category, "barang")))
+            .execute()
+
+        if (peminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const detailPeminjamanIds = peminjaman.map(p => p.detailPeminjamanId);
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(inArray(detailPeminjamans.id, detailPeminjamanIds))
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: detailPeminjaman
+        };
+    })
+    .get('/all/ruangan/:id', {
+        schema: {
+            description: "Get all detailPeminjaman by ruangan id",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(detailPeminjamanSchema.select)
+                })),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(and(eq(peminjamans.ruanganId, numId), eq(peminjamans.category, "ruangan")))
+            .execute()
+
+        if (peminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const detailPeminjamanIds = peminjaman.map(p => p.detailPeminjamanId);
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(inArray(detailPeminjamans.id, detailPeminjamanIds))
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: detailPeminjaman
+        };
+    })
+    .get('/all/kendaraan/:id', {
+        schema: {
+            description: "Get all detailPeminjaman by kendaraan id",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(detailPeminjamanSchema.select)
+                })),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(and(eq(peminjamans.kendaraanId, numId), eq(peminjamans.category, "kendaraan")))
+            .execute()
+
+        if (peminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const detailPeminjamanIds = peminjaman.map(p => p.detailPeminjamanId);
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(inArray(detailPeminjamans.id, detailPeminjamanIds))
+            .execute();
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: detailPeminjaman
+        };
+    })
+    .get('/all/draft/:id', {
+        schema: {
+            description: "Get all detailPeminjaman by draft id",
+            tags: ["detailPeminjaman"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: z.array(detailPeminjamanSchema.select)
+                })),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const { id } = req.params
+        const numId = parseInt(id)
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const peminjaman = await db
+            .select()
+            .from(peminjamans)
+            .where(eq(peminjamans.detailPeminjamanId, numId))
+            .execute()
+        
+        if (peminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const items: Array<{ id: number, category: string }> = [];
+
+        for (const p of peminjaman) {
+            if (p.category === "barang") {
+            const barang = await db.select().from(barangs).where(eq(barangs.id, p.barangId!)).execute();
+            items.push({ ...barang[0], category: "barang" });
+            } else if (p.category === "kendaraan") {
+            const kendaraan = await db.select().from(kendaraans).where(eq(kendaraans.id, p.kendaraanId!)).execute();
+            items.push({ ...kendaraan[0], category: "kendaraan" });
+            } else if (p.category === "ruangan") {
+            const ruangan = await db.select().from(ruangans).where(eq(ruangans.id, p.ruanganId!)).execute();
+            items.push({ ...ruangan[0], category: "ruangan" });
+            }
+        }
+
+        const allDetailPeminjamans = [];
+
+        for (const item of items) {
+            let itemPeminjamans: any[] = [];
+            if (item.category === "barang") {
+            itemPeminjamans = await db.select().from(peminjamans).where(eq(peminjamans.barangId, item.id)).execute();
+            } else if (item.category === "kendaraan") {
+            itemPeminjamans = await db.select().from(peminjamans).where(eq(peminjamans.kendaraanId, item.id)).execute();
+            } else if (item.category === "ruangan") {
+            itemPeminjamans = await db.select().from(peminjamans).where(eq(peminjamans.ruanganId, item.id)).execute();
+            }
+
+            for (const ip of itemPeminjamans) {
+            const detailPeminjaman = await db.select().from(detailPeminjamans).where(eq(detailPeminjamans.id, ip.detailPeminjamanId)).execute();
+            allDetailPeminjamans.push(detailPeminjaman[0]);
+            }
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: allDetailPeminjamans
+        };
+
     })
     .post('/pending', {
         schema: {
@@ -375,17 +656,14 @@ export const route = (instance: typeof server) => { instance
             data: dp[0]
         }
     })
-    .patch("/:id", {
+    .patch("/pending", {
         schema: {
-            description: "Update detailPeminjaman",
+            description: "Update detailPeminjaman to pending",
             tags: ["detailPeminjaman"],
-            params: z.object({
-                id: z.string()
-            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
-            body: detailPeminjamanSchema.insert.omit({ id: true, createdAt: true, userId: true}).extend({
+            body: detailPeminjamanSchema.insert.omit({ createdAt: true, userId: true}).extend({
                 borrowedDate: z.string().transform((str) => new Date(str)).optional(),
                 estimatedTime: z.string().transform((str) => new Date(str)).optional(),
                 returnDate: z.string().transform((str) => new Date(str)).optional()
@@ -406,22 +684,19 @@ export const route = (instance: typeof server) => { instance
                 statusCode: 401
             }
         }
+        
+        const { borrowedDate, estimatedTime, returnDate, objective, destination, passenger, status, id } = req.body
 
-        const { id } = req.params
-        const numId = parseInt(id)
-
-        if (!numId) {
+        if (!id) {
             return {
                 message: "Bad request",
                 statusCode: 400
             }
         }
 
-        const { borrowedDate, estimatedTime, returnDate, objective, destination, passenger, status } = req.body
-
         const dp = await db.select()
             .from(detailPeminjamans)
-            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
 
         if (dp.length === 0) {
             return {
@@ -440,37 +715,8 @@ export const route = (instance: typeof server) => { instance
                 passenger,
                 status
             })
-            .where(eq(detailPeminjamans.id, numId))
+            .where(eq(detailPeminjamans.id, id))
             .execute()
-
-        const peminjaman = await db.select()
-            .from(peminjamans)
-            .where(eq(peminjamans.detailPeminjamanId, numId))
-            .execute()
-            
-        for (const p of peminjaman) {
-            if (p.category == "barang") {
-                await db.update(barangs)
-                    .set({
-                        status: true
-                    })
-                    .where(eq(barangs.id, p.barangId!))
-            }
-            if (p.category == "kendaraan") {
-                await db.update(kendaraans)
-                    .set({
-                        status: true
-                    })
-                    .where(eq(kendaraans.id, p.kendaraanId!))
-            }
-            if (p.category == "ruangan") {
-                await db.update(ruangans)
-                    .set({
-                        status: true
-                    })
-                    .where(eq(ruangans.id, p.ruanganId!))
-            }
-        }
 
         await db.insert(logs).values({
             userId: actor.id,
@@ -485,17 +731,14 @@ export const route = (instance: typeof server) => { instance
             message: "Success",
         }
     })
-    .patch("/:id/canceled", {
+    .patch("/canceled", {
         schema: {
             description: "Update detailPeminjaman to canceled",
             tags: ["detailPeminjaman"],
-            params: z.object({
-                id: z.string()
-            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
-            body: detailPeminjamanSchema.insert.pick({ canceledReason: true }),
+            body: detailPeminjamanSchema.insert.pick({ id: true, canceledReason: true }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
@@ -513,21 +756,18 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        const { id } = req.params
-        const numId = parseInt(id)
+        const { canceledReason, id } = req.body
 
-        if (!numId) {
+        if (!id) {
             return {
                 message: "Bad request",
                 statusCode: 400
             }
         }
-
-        const { canceledReason } = req.body
-
+        
         const dp = await db.select()
             .from(detailPeminjamans)
-            .where(and(eq(detailPeminjamans.id, numId), eq(detailPeminjamans.userId, actor.id)))
+            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
 
         if (dp.length === 0) {
             return {
@@ -538,7 +778,7 @@ export const route = (instance: typeof server) => { instance
 
         const peminjaman = await db.select()
             .from(peminjamans)
-            .where(eq(peminjamans.detailPeminjamanId, numId))
+            .where(eq(peminjamans.detailPeminjamanId, id))
             .execute()
             
         for (const p of peminjaman) {
@@ -576,7 +816,7 @@ export const route = (instance: typeof server) => { instance
                 status: 'canceled',
                 canceledReason
             })
-            .where(eq(detailPeminjamans.id, numId))
+            .where(eq(detailPeminjamans.id, id))
             .execute()
 
         return {
