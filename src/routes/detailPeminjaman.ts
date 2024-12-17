@@ -178,6 +178,83 @@ export const route = (instance: typeof server) => { instance
             data: peminjaman
         };
     })
+    .get("/checkItemsStatus", {
+        schema: {
+            description: "Check detailPeminjaman status",
+            tags: ["detailPeminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(eq(detailPeminjamans.status, "approved"))
+            .execute();
+
+        if (detailPeminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        // for every detailPeminjaman, check if the borrowedDate is passed
+
+        for (const dp of detailPeminjaman) {
+            if (dp.borrowedDate! < new Date()) {
+                const peminjaman = await db
+                    .select()
+                    .from(peminjamans)
+                    .where(eq(peminjamans.detailPeminjamanId, dp.id))
+                    .execute();
+
+                for (const p of peminjaman) {
+                    if (p.category == "barang") {
+                        await db.update(barangs)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(barangs.id, p.barangId!))
+                    }
+                    if (p.category == "kendaraan") {
+                        await db.update(kendaraans)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(kendaraans.id, p.kendaraanId!))
+                    }
+                    if (p.category == "ruangan") {
+                        await db.update(ruangans)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(ruangans.id, p.ruanganId!))
+                    }
+                }
+            }
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+        };
+    })
     .post('/pending', {
         schema: {
             description: "Create new detailPeminjaman(pending)",

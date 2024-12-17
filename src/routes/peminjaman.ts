@@ -393,26 +393,6 @@ export const route = (instance: typeof server) => { instance
                 message: "Bad request"
             }
         }
-
-        if (detailPeminjaman[0].status === "pending") {
-            const updateStatus = async (table: any, id: number | undefined | null) => {
-                if (!id) {
-                    return {
-                    statusCode: 400,
-                    message: "Bad request"
-                    };
-                }
-                await db.update(table).set({ status: true }).where(eq(table.id, id));
-            };
-
-            if (category === peminjamanCategory.enumValues[0]) {
-                await updateStatus(barangs, barangId);
-            } else if (category === peminjamanCategory.enumValues[1]) {
-                await updateStatus(kendaraans, kendaraanId);
-            } else if (category === peminjamanCategory.enumValues[2]) {
-                await updateStatus(ruangans, ruanganId);
-            }
-        }
         
         if (['draft', 'pending'].includes(detailPeminjaman[0].status)) {
             let peminjaman;

@@ -129,9 +129,6 @@ export const route = (instance: typeof server) => { instance
             .where(eq(barangs.ruanganId, numberId))
             .execute();
 
-        console.log
-        console.log(res)
-
         return {
             statusCode: 200,
             message: "Success",
