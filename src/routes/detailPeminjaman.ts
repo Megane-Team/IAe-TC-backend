@@ -9,12 +9,13 @@ import { perangkats } from "@/models/perangkat.ts"
 import { ruangans } from "@/models/ruangans.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
-import { and, eq, inArray, or } from "drizzle-orm"
+import { and, eq, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { getNotificationMessage, getNotificationTitleMessage } from "./notifikasi.ts"
 import { notifikasis } from "@/models/notifikasis.ts"
 import { users } from "@/models/users.ts"
 import { getMessaging } from "firebase-admin/messaging"
+import { checkItemsStatus } from "@/utils/checkStatus.ts"
 
 export const prefix = '/detailPeminjaman'
 export const route = (instance: typeof server) => { instance
@@ -487,57 +488,7 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        const detailPeminjaman = await db
-            .select()
-            .from(detailPeminjamans)
-            .where(eq(detailPeminjamans.status, "approved"))
-            .execute();
-
-        if (detailPeminjaman.length === 0) {
-            return {
-                statusCode: 404,
-                message: "Not found"
-            };
-        }
-
-        for (const dp of detailPeminjaman) {
-            if (dp.borrowedDate! < new Date()) {
-                const peminjaman = await db
-                    .select()
-                    .from(peminjamans)
-                    .where(eq(peminjamans.detailPeminjamanId, dp.id))
-                    .execute();
-
-                for (const p of peminjaman) {
-                    if (p.category == "barang") {
-                        await db.update(barangs)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(barangs.id, p.barangId!))
-                    }
-                    if (p.category == "kendaraan") {
-                        await db.update(kendaraans)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(kendaraans.id, p.kendaraanId!))
-                    }
-                    if (p.category == "ruangan") {
-                        await db.update(ruangans)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(ruangans.id, p.ruanganId!))
-                    }
-                }
-            }
-        }
-
-        return {
-            statusCode: 200,
-            message: "Success",
-        };
+        return await checkItemsStatus();
     })
     .post('/draft', {
         schema: {
@@ -651,53 +602,54 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
              
-        const userss = await db
-            .select()
-            .from(users)
-            .where(eq(users.role, 'headOffice'));
+        // TODO: get a headOffice
+        // const userss = await db
+        //     .select()
+        //     .from(users)
+        //     .where(eq(users.role, 'headOffice'));
 
-        if (userss.length === 0) {
-            return {
-                statusCode: 404,
-                message: "Not found"
-            };
-        }
+        // if (userss.length === 0) {
+        //     return {
+        //         statusCode: 404,
+        //         message: "Not found"
+        //     };
+        // }
 
-        for (const user of userss) {
-            const devicesToken = await db
-                .select()
-                .from(perangkats)
-                .where(eq(perangkats.userId, user.id));
+        // for (const user of userss) {
+        //     const devicesToken = await db
+        //         .select()
+        //         .from(perangkats)
+        //         .where(eq(perangkats.userId, user.id));
 
-            if (devicesToken.length === 0) {
-                continue;
-            }
+        //     if (devicesToken.length === 0) {
+        //         continue;
+        //     }
 
-            for (const device of devicesToken) {
-                const messages = {
-                    notification: {
-                    title: getNotificationTitleMessage('PP'),
-                    body: getNotificationMessage('PP')
-                    },
-                    token: device.deviceToken
-                };
+        //     for (const device of devicesToken) {
+        //         const messages = {
+        //             notification: {
+        //             title: getNotificationTitleMessage('PP'),
+        //             body: getNotificationMessage('PP')
+        //             },
+        //             token: device.deviceToken
+        //         };
 
-                await db.insert(notifikasis)
-                    .values({
-                    userId: device.userId,
-                    category: 'PP',
-                    detailPeminjamanId: dp[0].id,
-                    isRead: false,
-                    });
+        //         await db.insert(notifikasis)
+        //             .values({
+        //             userId: device.userId,
+        //             category: 'PP',
+        //             detailPeminjamanId: dp[0].id,
+        //             isRead: false,
+        //             });
 
-                try {
-                    await getMessaging().send(messages);
-                    console.log('Successfully sent message');
-                } catch (error) {
-                    console.log('Error sending message:', error);
-                }
-            }
-        }
+        //         try {
+        //             await getMessaging().send(messages);
+        //             console.log('Successfully sent message');
+        //         } catch (error) {
+        //             console.log('Error sending message:', error);
+        //         }
+        //     }
+        // }
         
         return {
             statusCode: 200,
@@ -773,53 +725,54 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
 
-        const userss = await db
-            .select()
-            .from(users)
-            .where(eq(users.role, 'headOffice'));
+        // TODO: send to a headOffice
+        // const userss = await db
+        //     .select()
+        //     .from(users)
+        //     .where(eq(users.role, 'headOffice'));
 
-        if (userss.length === 0) {
-            return {
-                statusCode: 404,
-                message: "Not found"
-            };
-        }
+        // if (userss.length === 0) {
+        //     return {
+        //         statusCode: 404,
+        //         message: "Not found"
+        //     };
+        // }
 
-        for (const user of userss) {
-            const devicesToken = await db
-                .select()
-                .from(perangkats)
-                .where(eq(perangkats.userId, user.id));
+        // for (const user of userss) {
+        //     const devicesToken = await db
+        //         .select()
+        //         .from(perangkats)
+        //         .where(eq(perangkats.userId, user.id));
 
-            if (devicesToken.length === 0) {
-                continue;
-            }
+        //     if (devicesToken.length === 0) {
+        //         continue;
+        //     }
 
-            for (const device of devicesToken) {
-                const messages = {
-                    notification: {
-                    title: getNotificationTitleMessage('PP'),
-                    body: getNotificationMessage('PP')
-                    },
-                    token: device.deviceToken
-                };
+        //     for (const device of devicesToken) {
+        //         const messages = {
+        //             notification: {
+        //             title: getNotificationTitleMessage('PP'),
+        //             body: getNotificationMessage('PP')
+        //             },
+        //             token: device.deviceToken
+        //         };
 
-                await db.insert(notifikasis)
-                    .values({
-                    userId: device.userId,
-                    category: 'PP',
-                    detailPeminjamanId: id,
-                    isRead: false,
-                    });
+        //         await db.insert(notifikasis)
+        //             .values({
+        //             userId: device.userId,
+        //             category: 'PP',
+        //             detailPeminjamanId: id,
+        //             isRead: false,
+        //             });
 
-                try {
-                    await getMessaging().send(messages);
-                    console.log('Successfully sent message');
-                } catch (error) {
-                    console.log('Error sending message:', error);
-                }
-            }
-        }
+        //         try {
+        //             await getMessaging().send(messages);
+        //             console.log('Successfully sent message');
+        //         } catch (error) {
+        //             console.log('Error sending message:', error);
+        //         }
+        //     }
+        // }
 
         return {
             statusCode: 200,

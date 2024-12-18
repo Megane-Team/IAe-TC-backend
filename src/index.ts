@@ -14,6 +14,8 @@ import fstatic from '@fastify/static'
 import fmultipart from '@fastify/multipart'
 import { checkAndInsertDefaultUser } from "./utils/defaultData.ts";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
+import cron from 'node-cron'
+import { checkItemsStatus } from "./utils/checkStatus.ts";
 
 initializeApp({
     credential: applicationDefault(),
@@ -136,6 +138,7 @@ server.register(fstatic, {
     constraints: { host: 'localhost:3000' } // optional: default {}
 })
 
+// multipart
 server.register(fmultipart, {
     limits: {
         fieldNameSize: 100, // Max field name size in bytes
@@ -147,6 +150,12 @@ server.register(fmultipart, {
         parts: 1000         // For multipart forms, the max number of parts (fields + files)
     }
 })
+
+// cron
+cron.schedule('0 */6 * * *', async () => {
+    console.log('Running checkItemsStatus every 6 hours');
+    await checkItemsStatus();
+});
 
 server.listen({ port: port, host: host })
     .catch((error) => {
