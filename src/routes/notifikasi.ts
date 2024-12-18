@@ -25,6 +25,8 @@ export const getNotificationTitleMessage = (kategori: string): string => {
             return 'Waktu peminjaman akan segera berakhir!';
         case 'DO':
             return 'Peminjaman dibatalkan otomatis!';
+        case 'PP':
+            return 'Seseorang telah mengajukan peminjaman!';
         default:
             return 'Notifikasi tidak dikenal';
     }
@@ -45,6 +47,8 @@ export const getNotificationMessage = (kategori: string): string => {
             return 'Peminjaman mu sebentar lagi berakhir jangan lupa untuk mengembalikanya!';
         case 'DO':
             return 'Pengajuan peminjaman telah dibatalkan secara otomatis!';
+        case 'PP':
+            return 'Pengajuan peminjaman!';
         default:
             return 'Notifikasi tidak dikenal';
     }

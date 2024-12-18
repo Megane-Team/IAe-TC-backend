@@ -11,6 +11,10 @@ import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
 import { and, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
+import { getNotificationMessage, getNotificationTitleMessage } from "./notifikasi.ts"
+import { notifikasis } from "@/models/notifikasis.ts"
+import { users } from "@/models/users.ts"
+import { getMessaging } from "firebase-admin/messaging"
 
 export const prefix = '/detailPeminjaman'
 export const route = (instance: typeof server) => { instance
@@ -176,81 +180,6 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Success",
             data: peminjaman
-        };
-    })
-    .get("/checkItemsStatus", {
-        schema: {
-            description: "Check detailPeminjaman status",
-            tags: ["detailPeminjaman"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            response: {
-                200: genericResponse(200),
-                401: genericResponse(401),
-                404: genericResponse(404)
-            }
-        }
-    }, async (req) => {
-        const actor = await getUser(req.headers['authorization'], instance)
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
-        const detailPeminjaman = await db
-            .select()
-            .from(detailPeminjamans)
-            .where(eq(detailPeminjamans.status, "approved"))
-            .execute();
-
-        if (detailPeminjaman.length === 0) {
-            return {
-                statusCode: 404,
-                message: "Not found"
-            };
-        }
-
-        for (const dp of detailPeminjaman) {
-            if (dp.borrowedDate! < new Date()) {
-                const peminjaman = await db
-                    .select()
-                    .from(peminjamans)
-                    .where(eq(peminjamans.detailPeminjamanId, dp.id))
-                    .execute();
-
-                for (const p of peminjaman) {
-                    if (p.category == "barang") {
-                        await db.update(barangs)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(barangs.id, p.barangId!))
-                    }
-                    if (p.category == "kendaraan") {
-                        await db.update(kendaraans)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(kendaraans.id, p.kendaraanId!))
-                    }
-                    if (p.category == "ruangan") {
-                        await db.update(ruangans)
-                            .set({
-                                status: true
-                            })
-                            .where(eq(ruangans.id, p.ruanganId!))
-                    }
-                }
-            }
-        }
-
-        return {
-            statusCode: 200,
-            message: "Success",
         };
     })
     .get('/all/barang/:id', {
@@ -534,7 +463,133 @@ export const route = (instance: typeof server) => { instance
             message: "Success",
             data: allDetailPeminjamans
         };
+    })
+    .get("/checkItemsStatus", {
+        schema: {
+            description: "Check detailPeminjaman status",
+            tags: ["detailPeminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
 
+        if (!actor) {
+            return {
+                statusCode: 401,
+                message: "Unauthorized"
+            };
+        }
+
+        const detailPeminjaman = await db
+            .select()
+            .from(detailPeminjamans)
+            .where(eq(detailPeminjamans.status, "approved"))
+            .execute();
+
+        if (detailPeminjaman.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        for (const dp of detailPeminjaman) {
+            if (dp.borrowedDate! < new Date()) {
+                const peminjaman = await db
+                    .select()
+                    .from(peminjamans)
+                    .where(eq(peminjamans.detailPeminjamanId, dp.id))
+                    .execute();
+
+                for (const p of peminjaman) {
+                    if (p.category == "barang") {
+                        await db.update(barangs)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(barangs.id, p.barangId!))
+                    }
+                    if (p.category == "kendaraan") {
+                        await db.update(kendaraans)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(kendaraans.id, p.kendaraanId!))
+                    }
+                    if (p.category == "ruangan") {
+                        await db.update(ruangans)
+                            .set({
+                                status: true
+                            })
+                            .where(eq(ruangans.id, p.ruanganId!))
+                    }
+                }
+            }
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+        };
+    })
+    .post('/draft', {
+        schema: {
+            description: "Create new detailPeminjaman(draft)",
+            tags: ["detailPeminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: detailPeminjamanSchema.insert.pick({ status: true }), 
+            response: {
+                200: genericResponse(200).merge(z.object({
+                    data: detailPeminjamanSchema.select
+                })),
+                400: genericResponse(400),
+                401: genericResponse(401),
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { status }= req.body
+        
+        var dp = await db.select()
+            .from(detailPeminjamans)
+            .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))
+
+        if (dp.length === 0) {
+
+            console.log('dp is null')
+            await db.insert(detailPeminjamans).values({
+                status,
+                userId: actor.id,
+                createdAt: new Date()
+            })
+
+            dp = await db.select()
+                .from(detailPeminjamans)
+                .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))       
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: dp[0]
+        }
     })
     .post('/pending', {
         schema: {
@@ -596,60 +651,54 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
              
-        // TODO: send notification to admin
-        
-        return {
-            statusCode: 200,
-            message: "Success",
-            data: dp[0]
-        }
-    })
-    .post('/draft', {
-        schema: {
-            description: "Create new detailPeminjaman(draft)",
-            tags: ["detailPeminjaman"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            body: detailPeminjamanSchema.insert.pick({ status: true }), 
-            response: {
-                200: genericResponse(200).merge(z.object({
-                    data: detailPeminjamanSchema.select
-                })),
-                400: genericResponse(400),
-                401: genericResponse(401),
-            }
-        }
-    }, async (req) => {
-        const actor = await getUser(req.headers['authorization'], instance)
+        const userss = await db
+            .select()
+            .from(users)
+            .where(eq(users.role, 'headOffice'));
 
-        if (!actor) {
+        if (userss.length === 0) {
             return {
-                message: "Unauthorized",
-                statusCode: 401
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        for (const user of userss) {
+            const devicesToken = await db
+                .select()
+                .from(perangkats)
+                .where(eq(perangkats.userId, user.id));
+
+            if (devicesToken.length === 0) {
+                continue;
+            }
+
+            for (const device of devicesToken) {
+                const messages = {
+                    notification: {
+                    title: getNotificationTitleMessage('PP'),
+                    body: getNotificationMessage('PP')
+                    },
+                    token: device.deviceToken
+                };
+
+                await db.insert(notifikasis)
+                    .values({
+                    userId: device.userId,
+                    category: 'PP',
+                    detailPeminjamanId: dp[0].id,
+                    isRead: false,
+                    });
+
+                try {
+                    await getMessaging().send(messages);
+                    console.log('Successfully sent message');
+                } catch (error) {
+                    console.log('Error sending message:', error);
+                }
             }
         }
-
-        const { status }= req.body
         
-        var dp = await db.select()
-            .from(detailPeminjamans)
-            .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))
-
-        if (dp.length === 0) {
-
-            console.log('dp is null')
-            await db.insert(detailPeminjamans).values({
-                status,
-                userId: actor.id,
-                createdAt: new Date()
-            })
-
-            dp = await db.select()
-                .from(detailPeminjamans)
-                .where(and(eq(detailPeminjamans.status, status), eq(detailPeminjamans.userId, actor.id)))       
-        }
-
         return {
             statusCode: 200,
             message: "Success",
@@ -724,7 +773,53 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
 
-        // TODO: send notification to admin
+        const userss = await db
+            .select()
+            .from(users)
+            .where(eq(users.role, 'headOffice'));
+
+        if (userss.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        for (const user of userss) {
+            const devicesToken = await db
+                .select()
+                .from(perangkats)
+                .where(eq(perangkats.userId, user.id));
+
+            if (devicesToken.length === 0) {
+                continue;
+            }
+
+            for (const device of devicesToken) {
+                const messages = {
+                    notification: {
+                    title: getNotificationTitleMessage('PP'),
+                    body: getNotificationMessage('PP')
+                    },
+                    token: device.deviceToken
+                };
+
+                await db.insert(notifikasis)
+                    .values({
+                    userId: device.userId,
+                    category: 'PP',
+                    detailPeminjamanId: id,
+                    isRead: false,
+                    });
+
+                try {
+                    await getMessaging().send(messages);
+                    console.log('Successfully sent message');
+                } catch (error) {
+                    console.log('Error sending message:', error);
+                }
+            }
+        }
 
         return {
             statusCode: 200,
@@ -917,9 +1012,9 @@ export const route = (instance: typeof server) => { instance
             message: 'Success'
         }
     })
-    .patch('/approved', {
+    .patch("/approved", {
         schema: {
-            description: 'update detailPeminjaman status to approved',
+            description: "Update detailPeminjaman to approved",
             tags: ["detailPeminjaman"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -951,23 +1046,20 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        const dp = await db
-            .select()
+        const dp = await db.select()
             .from(detailPeminjamans)
             .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
 
-        if (!dp) {
+        if (dp.length === 0) {
             return {
-                statusCode: 400,
-                message: "bad request"
+                message: "Not found",
+                statusCode: 404
             }
         }
 
-        // TODO: send notification to user
-
         await db.insert(logs).values({
             userId: actor.id,
-            action: "Accepted the loan request",
+            action: `${actor.name} Accepted the loan request`,
             createdAt: new Date()
         }).execute();
 
@@ -975,12 +1067,52 @@ export const route = (instance: typeof server) => { instance
             .set({
                 status: 'approved',
             })
-            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
+            .where(eq(detailPeminjamans.id, id))
             .execute()
+
+        var devicesToken = await db
+            .select()
+            .from(perangkats)
+            .where(eq(perangkats.userId, dp[0].userId))
+
+        if (devicesToken.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        devicesToken.forEach((device) => {
+            const messages = {
+                notification: {
+                    title: getNotificationTitleMessage('PB'),
+                    body: getNotificationMessage('PB')
+                },
+                token: device.deviceToken
+            };
+
+            db.insert(notifikasis)
+                .values({
+                    userId: dp[0].userId,
+                    category: 'PB',
+                    detailPeminjamanId: id,
+                    isRead: false,
+                })
+                .execute();
+
+            getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
+            });
 
         return {
             statusCode: 200,
-            message: 'Success'
+            message: "Success",
         }
     })
 }

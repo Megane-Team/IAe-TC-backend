@@ -10,11 +10,33 @@ export async function checkAndInsertDefaultUser() {
 
     if (result.length === 0) {
         await db.insert(users).values({
+            name: "User",
+            email: "user@gmail.com",
+            role: "user",
+            unit: "HC 3000",
+            address: "Jl. Pegangsaan Timur No.56",
+            phoneNumber: "123456789",
+            photo: "admin",
+            password: hash,
+            createdAt: new Date(),
+        });
+        await db.insert(users).values({
             name: "Admin",
-            email: "example@gmail.com",
+            email: "admin@gmail.com",
             role: "admin",
-            unit: "admin",
-            address: "admin",
+            unit: "HC 3000",
+            address: "Jl. Pegangsaan Timur No.56",
+            phoneNumber: "123456789",
+            photo: "admin",
+            password: hash,
+            createdAt: new Date(),
+        });
+        await db.insert(users).values({
+            name: "Head Office",
+            email: "headOffice@gmail.com",
+            role: "headOffice",
+            unit: "HC 3000",
+            address: "Jl. Pegangsaan Timur No.56",
             phoneNumber: "123456789",
             photo: "admin",
             password: hash,
