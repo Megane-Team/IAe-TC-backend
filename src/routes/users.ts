@@ -138,7 +138,7 @@ export const route = (instance: typeof server) => { instance
             await db.insert(perangkats).values({
                 deviceToken: deviceToken,
                 userId: user[0].id
-            })
+            }).execute();
         }
 
         if (await perangkat[0].userId !== user[0].id) {

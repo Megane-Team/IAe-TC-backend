@@ -602,54 +602,53 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
              
-        // TODO: get a headOffice
-        // const userss = await db
-        //     .select()
-        //     .from(users)
-        //     .where(eq(users.role, 'headOffice'));
+        const userss = await db
+            .select()
+            .from(users)
+            .where(eq(users.role, 'headOffice'));
 
-        // if (userss.length === 0) {
-        //     return {
-        //         statusCode: 404,
-        //         message: "Not found"
-        //     };
-        // }
+        if (userss.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
 
-        // for (const user of userss) {
-        //     const devicesToken = await db
-        //         .select()
-        //         .from(perangkats)
-        //         .where(eq(perangkats.userId, user.id));
+        for (const user of userss) {
+            const devicesToken = await db
+                .select()
+                .from(perangkats)
+                .where(eq(perangkats.userId, user.id));
 
-        //     if (devicesToken.length === 0) {
-        //         continue;
-        //     }
+            if (devicesToken.length === 0) {
+                continue;
+            }
 
-        //     for (const device of devicesToken) {
-        //         const messages = {
-        //             notification: {
-        //             title: getNotificationTitleMessage('PP'),
-        //             body: getNotificationMessage('PP')
-        //             },
-        //             token: device.deviceToken
-        //         };
+            for (const device of devicesToken) {
+                const messages = {
+                    notification: {
+                    title: getNotificationTitleMessage('PP'),
+                    body: getNotificationMessage('PP')
+                    },
+                    token: device.deviceToken
+                };
 
-        //         await db.insert(notifikasis)
-        //             .values({
-        //             userId: device.userId,
-        //             category: 'PP',
-        //             detailPeminjamanId: dp[0].id,
-        //             isRead: false,
-        //             });
+                await db.insert(notifikasis)
+                    .values({
+                    userId: device.userId,
+                    category: 'PP',
+                    detailPeminjamanId: dp[0].id,
+                    isRead: false,
+                    });
 
-        //         try {
-        //             await getMessaging().send(messages);
-        //             console.log('Successfully sent message');
-        //         } catch (error) {
-        //             console.log('Error sending message:', error);
-        //         }
-        //     }
-        // }
+                try {
+                    await getMessaging().send(messages);
+                    console.log('Successfully sent message');
+                } catch (error) {
+                    console.log('Error sending message:', error);
+                }
+            }
+        }
         
         return {
             statusCode: 200,
@@ -714,7 +713,8 @@ export const route = (instance: typeof server) => { instance
                 objective,
                 destination,
                 passenger,
-                status
+                status,
+                createdAt: new Date()
             })
             .where(eq(detailPeminjamans.id, id))
             .execute()
@@ -725,54 +725,53 @@ export const route = (instance: typeof server) => { instance
             createdAt: new Date()
         }).execute();
 
-        // TODO: send to a headOffice
-        // const userss = await db
-        //     .select()
-        //     .from(users)
-        //     .where(eq(users.role, 'headOffice'));
+        const userss = await db
+            .select()
+            .from(users)
+            .where(eq(users.role, 'headOffice'));
 
-        // if (userss.length === 0) {
-        //     return {
-        //         statusCode: 404,
-        //         message: "Not found"
-        //     };
-        // }
+        if (userss.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
 
-        // for (const user of userss) {
-        //     const devicesToken = await db
-        //         .select()
-        //         .from(perangkats)
-        //         .where(eq(perangkats.userId, user.id));
+        for (const user of userss) {
+            const devicesToken = await db
+                .select()
+                .from(perangkats)
+                .where(eq(perangkats.userId, user.id));
 
-        //     if (devicesToken.length === 0) {
-        //         continue;
-        //     }
+            if (devicesToken.length === 0) {
+                continue;
+            }
 
-        //     for (const device of devicesToken) {
-        //         const messages = {
-        //             notification: {
-        //             title: getNotificationTitleMessage('PP'),
-        //             body: getNotificationMessage('PP')
-        //             },
-        //             token: device.deviceToken
-        //         };
+            for (const device of devicesToken) {
+                const messages = {
+                    notification: {
+                    title: getNotificationTitleMessage('PP'),
+                    body: getNotificationMessage('PP')
+                    },
+                    token: device.deviceToken
+                };
 
-        //         await db.insert(notifikasis)
-        //             .values({
-        //             userId: device.userId,
-        //             category: 'PP',
-        //             detailPeminjamanId: id,
-        //             isRead: false,
-        //             });
+                await db.insert(notifikasis)
+                    .values({
+                    userId: device.userId,
+                    category: 'PP',
+                    detailPeminjamanId: id,
+                    isRead: false,
+                    });
 
-        //         try {
-        //             await getMessaging().send(messages);
-        //             console.log('Successfully sent message');
-        //         } catch (error) {
-        //             console.log('Error sending message:', error);
-        //         }
-        //     }
-        // }
+                try {
+                    await getMessaging().send(messages);
+                    console.log('Successfully sent message');
+                } catch (error) {
+                    console.log('Error sending message:', error);
+                }
+            }
+        }
 
         return {
             statusCode: 200,
@@ -1001,11 +1000,11 @@ export const route = (instance: typeof server) => { instance
 
         const dp = await db.select()
             .from(detailPeminjamans)
-            .where(and(eq(detailPeminjamans.id, id), eq(detailPeminjamans.userId, actor.id)))
+            .where(eq(detailPeminjamans.id, id))
 
         if (dp.length === 0) {
             return {
-                message: "Not found",
+                message: "detailPeminjaman Not found",
                 statusCode: 404
             }
         }
@@ -1035,7 +1034,7 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
-        devicesToken.forEach((device) => {
+        devicesToken.forEach(async (device) => {
             const messages = {
                 notification: {
                     title: getNotificationTitleMessage('PB'),
@@ -1044,7 +1043,7 @@ export const route = (instance: typeof server) => { instance
                 token: device.deviceToken
             };
 
-            db.insert(notifikasis)
+            await db.insert(notifikasis)
                 .values({
                     userId: dp[0].userId,
                     category: 'PB',
