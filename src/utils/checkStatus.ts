@@ -82,6 +82,8 @@ export async function checkItemsStatus() {
             .where(eq(perangkats.userId, pending.userId))
             .execute();
 
+        let notificationInserted = false;
+
         for (const device of devicesToken) {
             const messages = {
                 notification: {
@@ -91,21 +93,25 @@ export async function checkItemsStatus() {
                 token: device.deviceToken
             };
 
-            await db.insert(notifikasis)
-                .values({
-                    userId: device.userId,
-                    category: 'DO',
-                    detailPeminjamanId: pending.id,
-                    isRead: false,
-                })
-                .execute();
-
-            try {
-                await getMessaging().send(messages);
-                console.log('Successfully sent message');
-            } catch (error) {
-                console.log('Error sending message:', error);
+            if (!notificationInserted) {
+                await db.insert(notifikasis)
+                    .values({
+                        userId: device.userId,
+                        category: 'DO',
+                        detailPeminjamanId: pending.id,
+                        isRead: false,
+                    })
+                    .execute();
+                notificationInserted = true;
             }
+            getMessaging()
+            .send(messages)
+            .then((response) => {
+                console.log('Successfully sent message:', response);
+            })
+            .catch((error) => {
+                console.log('Error sending message:', error);
+            });
         }
     }
 

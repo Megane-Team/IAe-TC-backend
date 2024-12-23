@@ -624,6 +624,8 @@ export const route = (instance: typeof server) => { instance
                 continue;
             }
 
+            let notificationInserted = false;
+
             for (const device of devicesToken) {
                 const messages = {
                     notification: {
@@ -633,20 +635,25 @@ export const route = (instance: typeof server) => { instance
                     token: device.deviceToken
                 };
 
-                await db.insert(notifikasis)
-                    .values({
-                    userId: device.userId,
-                    category: 'PP',
-                    detailPeminjamanId: dp[0].id,
-                    isRead: false,
-                    });
-
-                try {
-                    await getMessaging().send(messages);
-                    console.log('Successfully sent message');
-                } catch (error) {
-                    console.log('Error sending message:', error);
+                if (!notificationInserted) {
+                    await db.insert(notifikasis)
+                        .values({
+                            userId: device.userId,
+                            category: 'PP',
+                            detailPeminjamanId: dp[0].id,
+                            isRead: false,
+                        });
+                    notificationInserted = true;
                 }
+
+                getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
             }
         }
         
@@ -747,6 +754,8 @@ export const route = (instance: typeof server) => { instance
                 continue;
             }
 
+            let notificationInserted = false;
+
             for (const device of devicesToken) {
                 const messages = {
                     notification: {
@@ -756,20 +765,25 @@ export const route = (instance: typeof server) => { instance
                     token: device.deviceToken
                 };
 
-                await db.insert(notifikasis)
-                    .values({
-                    userId: device.userId,
-                    category: 'PP',
-                    detailPeminjamanId: id,
-                    isRead: false,
+                if (!notificationInserted) {
+                    await db.insert(notifikasis)
+                        .values({
+                            userId: device.userId,
+                            category: 'PP',
+                            detailPeminjamanId: id,
+                            isRead: false,
                     });
-
-                try {
-                    await getMessaging().send(messages);
-                    console.log('Successfully sent message');
-                } catch (error) {
-                    console.log('Error sending message:', error);
+                    notificationInserted = true;
                 }
+
+                getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
             }
         }
 
@@ -968,9 +982,9 @@ export const route = (instance: typeof server) => { instance
         schema: {
             description: "Update detailPeminjaman to approved",
             tags: ["detailPeminjaman"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
+            // headers: z.object({
+            //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            // }),
             body: detailPeminjamanSchema.insert.pick({ id: true }),
             response: {
                 200: genericResponse(200),
@@ -980,14 +994,14 @@ export const route = (instance: typeof server) => { instance
             }
         }
     }, async (req) => {
-        const actor = await getUser(req.headers['authorization'], instance)
+        // const actor = await getUser(req.headers['authorization'], instance)
 
-        if (!actor) {
-            return {
-                message: "Unauthorized",
-                statusCode: 401
-            }
-        }
+        // if (!actor) {
+        //     return {
+        //         message: "Unauthorized",
+        //         statusCode: 401
+        //     }
+        // }
 
         const { id } = req.body
 
@@ -1009,11 +1023,11 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        await db.insert(logs).values({
-            userId: actor.id,
-            action: `${actor.name} Accepted the loan request`,
-            createdAt: new Date()
-        }).execute();
+        // await db.insert(logs).values({
+        //     userId: actor.id,
+        //     action: `${actor.name} Accepted the loan request`,
+        //     createdAt: new Date()
+        // }).execute();
 
         await db.update(detailPeminjamans)
             .set({
@@ -1034,23 +1048,28 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
+        let notificationInserted = false;
+
         devicesToken.forEach(async (device) => {
             const messages = {
                 notification: {
-                    title: getNotificationTitleMessage('PB'),
-                    body: getNotificationMessage('PB')
+                    title: getNotificationTitleMessage('PD'),
+                    body: getNotificationMessage('PD')
                 },
                 token: device.deviceToken
             };
 
-            await db.insert(notifikasis)
-                .values({
-                    userId: dp[0].userId,
-                    category: 'PB',
-                    detailPeminjamanId: id,
-                    isRead: false,
-                })
-                .execute();
+            if (!notificationInserted) {
+                await db.insert(notifikasis)
+                    .values({
+                        userId: dp[0].userId,
+                        category: 'PD',
+                        detailPeminjamanId: id,
+                        isRead: false,
+                    })
+                    .execute();
+                notificationInserted = true;
+            }
 
             getMessaging()
                 .send(messages)

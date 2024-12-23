@@ -145,7 +145,7 @@ export const route = (instance: typeof server) => { instance
             message: "Success"
         };
     })
-    .post("/send/:id", {
+    .post("/send/id/:id", {
         schema: {
             description: "Send notification to user id",
             tags: ["notifikasi"],
@@ -189,6 +189,8 @@ export const route = (instance: typeof server) => { instance
             };
         }
 
+        let notificationInserted = false;
+
         devicesToken.forEach((device) => {
             const messages = {
                 notification: {
@@ -198,14 +200,100 @@ export const route = (instance: typeof server) => { instance
                 token: device.deviceToken
             };
 
-            db.insert(notifikasis)
-                .values({
-                    userId: user[0].id,
-                    category,
-                    detailPeminjamanId,
-                    isRead: false,
+            if (!notificationInserted) {
+                db.insert(notifikasis)
+                    .values({
+                        userId: user[0].id,
+                        category,
+                        detailPeminjamanId,
+                        isRead: false,
+                    })
+                    .execute();
+                notificationInserted = true;
+            }
+
+            getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response)
                 })
-                .execute();
+                .catch((error) => {
+                    console.log('Error sending message:', error)
+                });
+            })
+
+        return {
+            statusCode: 200,
+            message: "Success"
+        }
+    })
+    .post("/send/role/:role", {
+        schema: {
+            description: "Send notification to user id",
+            tags: ["notifikasi"],
+            params: z.object({
+                role: z.string()
+            }),
+            body: notifikasiSchema.insert.pick({ category: true, detailPeminjamanId: true }),
+            response: {
+                200: genericResponse(200),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const { role } = req.params;
+
+        const userRole: "admin" | "user" | "headOffice" = role as "admin" | "user" | "headOffice";
+
+        var user = await db
+            .select()
+            .from(users)
+            .where(eq(users.role, userRole))
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            }
+        }
+
+        var { category, detailPeminjamanId } = req.body;
+        
+        var devicesToken = await db
+            .select()
+            .from(perangkats)
+            .where(eq(perangkats.userId, user[0].id))
+
+        if (devicesToken.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            }
+        }
+
+        let notificationInserted = false;
+
+        devicesToken.forEach((device) => {
+            const messages = {
+                notification: {
+                    title: getNotificationTitleMessage(category?.toString() ?? ''),
+                    body: getNotificationMessage(category?.toString() ?? '')
+                },
+                token: device.deviceToken
+            };
+
+            if (!notificationInserted) {
+                db.insert(notifikasis)
+                    .values({
+                        userId: user[0].id,
+                        category,
+                        detailPeminjamanId,
+                        isRead: false,
+                    })
+                    .execute();
+                notificationInserted = true;
+            }
 
             getMessaging()
                 .send(messages)
@@ -220,6 +308,6 @@ export const route = (instance: typeof server) => { instance
         return {
             statusCode: 200,
             message: "Success"
-        };
-    });
+        }
+    })
 } 

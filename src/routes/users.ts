@@ -113,7 +113,10 @@ export const route = (instance: typeof server) => { instance
     }, async (req) => {
         const { email, password, deviceToken } = req.body;
 
-        const user = await db.select().from(users).where(eq(users.email, email)).execute();
+        const user = await db.select()
+            .from(users)
+            .where(eq(users.email, email))
+            .execute();
 
         if (user.length === 0) {
             return {
@@ -122,17 +125,17 @@ export const route = (instance: typeof server) => { instance
             }; 
         }
 
-        const result = await argon2.verify(user[0].password, password);
+        const validPassword = await argon2.verify(user[0].password, password);
 
-        if (!result) {
+        if (!validPassword) {
             return {
                 statusCode: 401,
                 message: "Unauthorized"
             };
         }
-        const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
-
         const token = req.jwt.sign({ id: user[0].id }); 
+        
+        const perangkat = await db.select().from(perangkats).where(eq(perangkats.deviceToken, deviceToken))
         
         if (perangkat.length === 0) {
             await db.insert(perangkats).values({
@@ -141,7 +144,7 @@ export const route = (instance: typeof server) => { instance
             }).execute();
         }
 
-        if (await perangkat[0].userId !== user[0].id) {
+        if (perangkat[0].userId !== user[0].id) {
             await db.update(perangkats).set({
                 userId: user[0].id
             }).where(eq(perangkats.deviceToken, deviceToken)).execute();    
