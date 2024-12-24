@@ -528,7 +528,7 @@ export const route = (instance: typeof server) => { instance
             await db.insert(detailPeminjamans).values({
                 status,
                 userId: actor.id,
-                createdAt: new Date()
+                createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
             })
 
             dp = await db.select()
@@ -589,7 +589,7 @@ export const route = (instance: typeof server) => { instance
             destination,
             passenger,
             userId: actor.id,
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         })
 
         const dp = await db.select()
@@ -599,7 +599,7 @@ export const route = (instance: typeof server) => { instance
         await db.insert(logs).values({
             userId: actor.id,
             action: "Loan items",
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
              
         const userss = await db
@@ -642,6 +642,7 @@ export const route = (instance: typeof server) => { instance
                             category: 'PP',
                             detailPeminjamanId: dp[0].id,
                             isRead: false,
+
                         });
                     notificationInserted = true;
                 }
@@ -721,7 +722,7 @@ export const route = (instance: typeof server) => { instance
                 destination,
                 passenger,
                 status,
-                createdAt: new Date()
+                createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
             })
             .where(eq(detailPeminjamans.id, id))
             .execute()
@@ -729,7 +730,7 @@ export const route = (instance: typeof server) => { instance
         await db.insert(logs).values({
             userId: actor.id,
             action: "Loan items",
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
 
         const userss = await db
@@ -772,6 +773,7 @@ export const route = (instance: typeof server) => { instance
                             category: 'PP',
                             detailPeminjamanId: id,
                             isRead: false,
+                            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
                     });
                     notificationInserted = true;
                 }
@@ -869,7 +871,7 @@ export const route = (instance: typeof server) => { instance
         await db.insert(logs).values({
                     userId: actor.id,
                     action: "Canceled the loan",
-                    createdAt: new Date()
+                    createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
                 }).execute();
 
         await db.update(detailPeminjamans)
@@ -922,7 +924,7 @@ export const route = (instance: typeof server) => { instance
         await db.insert(logs).values({
             userId: actor.id,
             action: "Returned the loan",
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))   
         }).execute();
 
         const dp = await db
@@ -1026,7 +1028,7 @@ export const route = (instance: typeof server) => { instance
         // await db.insert(logs).values({
         //     userId: actor.id,
         //     action: `${actor.name} Accepted the loan request`,
-        //     createdAt: new Date()
+        // createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         // }).execute();
 
         await db.update(detailPeminjamans)
@@ -1050,36 +1052,37 @@ export const route = (instance: typeof server) => { instance
 
         let notificationInserted = false;
 
-        devicesToken.forEach(async (device) => {
+        for (const device of devicesToken) {
             const messages = {
-                notification: {
-                    title: getNotificationTitleMessage('PD'),
-                    body: getNotificationMessage('PD')
-                },
-                token: device.deviceToken
+            notification: {
+                title: getNotificationTitleMessage('PD'),
+                body: getNotificationMessage('PD')
+            },
+            token: device.deviceToken
             };
 
             if (!notificationInserted) {
                 await db.insert(notifikasis)
                     .values({
-                        userId: dp[0].userId,
-                        category: 'PD',
-                        detailPeminjamanId: id,
-                        isRead: false,
+                    userId: dp[0].userId,
+                    category: 'PD',
+                    detailPeminjamanId: id,
+                    isRead: false,
+                    createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
                     })
                     .execute();
                 notificationInserted = true;
             }
 
             getMessaging()
-                .send(messages)
-                .then((response) => {
-                    console.log('Successfully sent message:', response);
-                })
-                .catch((error) => {
-                    console.log('Error sending message:', error);
-                });
+            .send(messages)
+            .then((response) => {
+                console.log('Successfully sent message:', response);
+            })
+            .catch((error) => {
+                console.log('Error sending message:', error);
             });
+        }
 
         return {
             statusCode: 200,

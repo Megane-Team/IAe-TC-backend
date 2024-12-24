@@ -425,7 +425,7 @@ export const route = (instance: typeof server) => { instance
             barangId,
             kendaraanId,
             detailPeminjamanId,
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         })
 
         return {

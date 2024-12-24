@@ -153,7 +153,7 @@ export const route = (instance: typeof server) => { instance
         await db.insert(logs).values({
             userId: user[0].id,
             action: "login",
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
 
         return {
@@ -196,7 +196,7 @@ export const route = (instance: typeof server) => { instance
             address: address,
             phoneNumber: phoneNumber,
             photo: photo,
-            createdAt: new Date()
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
 
         return {
