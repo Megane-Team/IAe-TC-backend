@@ -395,22 +395,18 @@ export const route = (instance: typeof server) => { instance
         }
         
         if (['draft', 'pending'].includes(detailPeminjaman[0].status)) {
-            let peminjaman;
-            if (category === 'barang') {
-                peminjaman = await db.select()
-                    .from(peminjamans)
-                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.barangId, barangId!)));
-            } else if (category === 'kendaraan') {
-                peminjaman = await db.select()
-                    .from(peminjamans)
-                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.kendaraanId, kendaraanId!)));
-            } else if (category === 'ruangan') {
-                peminjaman = await db.select()
-                    .from(peminjamans)
-                    .where(and(eq(peminjamans.userId, actor.id), eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id), eq(peminjamans.ruanganId, ruanganId!)));
-            }
+            const peminjaman = await db.select()
+                .from(peminjamans)
+                .where(and(
+                    eq(peminjamans.userId, actor.id),
+                    eq(peminjamans.detailPeminjamanId, detailPeminjaman[0].id),
+                    category === 'barang' ? eq(peminjamans.barangId, barangId!) :
+                    category === 'kendaraan' ? eq(peminjamans.kendaraanId, kendaraanId!) :
+                    eq(peminjamans.ruanganId, ruanganId!)
+                ))
+                .execute();
         
-            if (peminjaman && peminjaman.length > 0) {
+            if (peminjaman.length > 0) {
                 return {
                     statusCode: 429,
                     message: 'duplicate request'
@@ -426,8 +422,26 @@ export const route = (instance: typeof server) => { instance
             kendaraanId,
             detailPeminjamanId,
             createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
-        })
+        }).execute();
 
+
+        if (category === 'ruangan') {
+            const itemsInRoom = await db
+            .select()
+            .from(barangs)
+            .where(eq(barangs.ruanganId, ruanganId!));
+
+            for (const item of itemsInRoom) {
+            await db.insert(peminjamans).values({
+                category: 'barang',
+                userId: actor.id,
+                barangId: item.id,
+                detailPeminjamanId,
+                createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+            });
+            }
+        }
+       
         return {
             statusCode: 200,
             message: "Success"
