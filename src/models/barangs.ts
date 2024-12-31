@@ -11,8 +11,8 @@ export const barangs = pgTable("barangs", {
     condition: text().notNull(),
     warranty: date().notNull(),
     photo: text(),
+    ruanganId: integer().notNull().references(() => ruangans.id),
     createdAt: timestamp({ withTimezone: true }).notNull().default(sql`now()`),
-    ruanganId: integer().notNull().references(() => ruangans.id)
 })
 
 export const barangSchema = {

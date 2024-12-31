@@ -4,7 +4,9 @@ import { barangs, barangSchema } from "@/models/barangs.ts"
 import { db } from "@/modules/database.ts"
 import { getUser } from "@/utils/getUser.ts"
 import { eq } from "drizzle-orm"
+import path from "path"
 import { z } from "zod"
+import fs from 'fs';
 
 export const prefix = "/barangs"
 export const route = (instance: typeof server) => instance
@@ -86,4 +88,71 @@ export const route = (instance: typeof server) => instance
                 message: "Success",
                 data: res[0]
             }
-    });
+    })
+    .patch('/patch', {
+        schema: {
+            description: "update barang",
+            tags: ["barangs"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Barier ", ""))
+            }),
+            body: z.object({
+                data: barangSchema.select.omit({ createdAt: true }),
+                files: z.any()
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers["authorization"], instance)
+
+        if (!actor) {
+            return {
+                message: "unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { data: { id, name, code, status, condition, warranty, ruanganId, photo}} = req.body
+        const parts = req.parts();
+        const data: { [key: string]: any } = {};
+        let photos;
+
+        for await (const part of parts) {
+            if (part.type === 'file') {
+                const uploadPath = path.join(__dirname, '../../public/assets/barang/', part.filename);
+                const writeStream = fs.createWriteStream(uploadPath);
+                await part.file.pipe(writeStream);
+                photos = uploadPath;
+            } else {
+                data[part.fieldname] = part.value;
+            }
+        }
+
+        const barang = await db
+            .select()
+            .from(barangs)
+            .where(eq(barangs.id, id))
+
+        if (barang.length == 0) {
+            return {
+                message: "Barang not found!",
+                statusCode: 404
+            }
+        }
+
+        await db.update(barangs)
+            .set({
+                name,
+                code,
+                status,
+                condition,
+                warranty,
+                photo,
+                ruanganId
+            })
+    })
