@@ -54,6 +54,7 @@ export const route = (instance: typeof server) => instance
                 })),
                 401: genericResponse(401)
             }
+
         },
         preHandler: authorizeUser
     }, async (req) => {
@@ -123,71 +124,78 @@ export const route = (instance: typeof server) => instance
         schema: {
             description: "create a new barang",
             tags: ["barangs"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            body: barangSchema.select.omit({ createdAt: true, id: true }),
+            // headers: z.object({
+            //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            // }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
                 401: genericResponse(401)
             }
         },
-        preHandler: authorizeUser
-    }, async (req) => {
-        const { name, code, status, condition, warranty, ruanganId, photo } = req.body;
-
-        await db.insert(barangs).values({
-            name,
-            code,
-            status,
-            condition,
-            warranty,
-            ruanganId,
-            photo
-        }).execute();
-
-        return {
-            statusCode: 200,
-            message: "Barang created successfully",
-        };
-    })
-    .post("/upload", {
-        schema: {
-            description: "upload an image",
-            tags: ["barangs"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            response: {
-                200: genericResponse(200),
-                400: genericResponse(400),
-                401: genericResponse(401)
-            }
-        },
-        preHandler: authorizeUser
+        // preHandler: authorizeUser
     }, async (req) => {
         const parts = req.parts();
-        let photoPath;
+        let name: string = "";
+        let code: string = "";
+        let status: boolean = false;
+        let condition: string = "";
+        let warranty: string = "";
+        let ruanganId: number = 0;
+        let photoPath: string = "";
 
         for await (const part of parts) {
-            if (part.type === 'file') {
-                const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', part.filename);
+            if (part.type === 'field') {
+                switch (part.fieldname) {
+                    case 'name':
+                        name = String(part.value);
+                        break;
+                    case 'code':
+                        code = String(part.value);
+                        break;
+                    case 'status':
+                        status = part.value === 'true';
+                        break;
+                    case 'condition':
+                        condition = String(part.value);
+                        break;
+                    case 'warranty':
+                        warranty = new Date(String(part.value)).toISOString();
+                        break;
+                    case 'ruanganId':
+                        ruanganId = Number(part.value);
+                        break;
+                }
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${name}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
                 const writeStream = fs.createWriteStream(uploadPath);
                 await part.file.pipe(writeStream);
                 photoPath = uploadPath;
             }
         }
 
-        if (!photoPath) {
+        if (!name || !photoPath) {
             return {
-                message: "No file uploaded",
+                message: "Name or file not provided",
                 statusCode: 400
             }
         }
 
+        await db.insert(barangs).values({
+            name,
+            code,
+            condition,
+            status,
+            warranty,
+            ruanganId,
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
+            photo: name
+        })
+
         return {
             statusCode: 200,
-            message: "File uploaded successfully"
+            message: "Barang created successfully",
         };
-    });
+    })
