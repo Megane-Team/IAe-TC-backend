@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm"
 import path from "path"
 import { z } from "zod"
 import fs from 'fs';
+import { authorizeUser } from "@/utils/preHandlers.ts"
 
 export const prefix = "/barangs"
 export const route = (instance: typeof server) => instance
@@ -21,30 +22,21 @@ export const route = (instance: typeof server) => instance
                 200: genericResponse(200).merge(z.object({
                     data: z.array(barangSchema.select.omit({ createdAt: true }))
                 })),
-
                 401: genericResponse(401)
             }
-        }
-    }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
+        },
+        preHandler: authorizeUser
+    }, async () => {
         const res = await db
-                .select()
-                .from(barangs)
-                .execute();
+            .select()
+            .from(barangs)
+            .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res
-            }
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res
+        }
     })
     .get("/:id", {
         schema: {
@@ -60,41 +52,32 @@ export const route = (instance: typeof server) => instance
                 200: genericResponse(200).merge(z.object({
                     data: barangSchema.select.omit({ createdAt: true })
                 })),
-
                 401: genericResponse(401)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
         const { id } = req.params
         const numberId = Number(id);
 
         const res = await db
-                .select()
-                .from(barangs)
-                .where(eq(barangs.id, numberId))
-                .execute();
+            .select()
+            .from(barangs)
+            .where(eq(barangs.id, numberId))
+            .execute();
 
-            return {
-                statusCode: 200,
-                message: "Success",
-                data: res[0]
-            }
+        return {
+            statusCode: 200,
+            message: "Success",
+            data: res[0]
+        }
     })
     .patch('/patch', {
         schema: {
             description: "update barang",
             tags: ["barangs"],
             headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Barier ", ""))
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
             body: barangSchema.select.omit({ createdAt: true }),
             response: {
@@ -103,18 +86,10 @@ export const route = (instance: typeof server) => instance
                 401: genericResponse(401),
                 404: genericResponse(404)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance)
-
-        if (!actor) {
-            return {
-                message: "unauthorized",
-                statusCode: 401
-            }
-        }
-
-        const { id, name, code, status, condition, warranty, ruanganId, photo} = req.body
+        const { id, name, code, status, condition, warranty, ruanganId, photo } = req.body
 
         const barang = await db
             .select()
@@ -138,4 +113,81 @@ export const route = (instance: typeof server) => instance
                 photo,
                 ruanganId
             })
+
+        return {
+            message: "success",
+            statusCode: 200
+        }
     })
+    .post("/", {
+        schema: {
+            description: "create a new barang",
+            tags: ["barangs"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: barangSchema.select.omit({ createdAt: true, id: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { name, code, status, condition, warranty, ruanganId, photo } = req.body;
+
+        await db.insert(barangs).values({
+            name,
+            code,
+            status,
+            condition,
+            warranty,
+            ruanganId,
+            photo
+        }).execute();
+
+        return {
+            statusCode: 200,
+            message: "Barang created successfully",
+        };
+    })
+    .post("/upload", {
+        schema: {
+            description: "upload an image",
+            tags: ["barangs"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const parts = req.parts();
+        let photoPath;
+
+        for await (const part of parts) {
+            if (part.type === 'file') {
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', part.filename);
+                const writeStream = fs.createWriteStream(uploadPath);
+                await part.file.pipe(writeStream);
+                photoPath = uploadPath;
+            }
+        }
+
+        if (!photoPath) {
+            return {
+                message: "No file uploaded",
+                statusCode: 400
+            }
+        }
+
+        return {
+            statusCode: 200,
+            message: "File uploaded successfully"
+        };
+    });

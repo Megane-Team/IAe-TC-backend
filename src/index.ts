@@ -11,7 +11,7 @@ import status from "statuses";
 import fjwt from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
 import fstatic from '@fastify/static'
-import fmultipart from '@fastify/multipart'
+import fastifyMultipart from '@fastify/multipart'
 import { checkAndInsertDefaultUser } from "./utils/defaultData.ts";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
 import cron from 'node-cron'
@@ -32,14 +32,8 @@ const server = fastify({
     }
 }).withTypeProvider<ZodTypeProvider>();
 
-// graceful shutdown
-const listeners = ['SIGINT', 'SIGTERM']
-listeners.forEach((signal) => {
-  process.on(signal, async () => {
-    await server.close()
-    process.exit(0)
-  })
-})
+// multipart
+server.register(fastifyMultipart)
 
 try {
     server.log.warn("Migrating database...");
@@ -136,19 +130,6 @@ server.register(fstatic, {
     root: resolve(import.meta.dirname, 'public/assets'),
     prefix: '/public/', // optional: default '/'
     constraints: { host: 'localhost:3000' } // optional: default {}
-})
-
-// multipart
-server.register(fmultipart, {
-    limits: {
-        fieldNameSize: 100, // Max field name size in bytes
-        fieldSize: 100,     // Max field value size in bytes
-        fields: 10,         // Max number of non-file fields
-        fileSize: 1000000,  // For multipart forms, the max file size in bytes
-        files: 1,           // Max number of file fields
-        headerPairs: 2000,  // Max number of header key=>value pairs
-        parts: 1000         // For multipart forms, the max number of parts (fields + files)
-    }
 })
 
 // cron
