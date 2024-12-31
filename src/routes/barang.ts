@@ -96,10 +96,7 @@ export const route = (instance: typeof server) => instance
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Barier ", ""))
             }),
-            body: z.object({
-                data: barangSchema.select.omit({ createdAt: true }),
-                files: z.any()
-            }),
+            body: barangSchema.select.omit({ createdAt: true }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
@@ -117,21 +114,7 @@ export const route = (instance: typeof server) => instance
             }
         }
 
-        const { data: { id, name, code, status, condition, warranty, ruanganId, photo}} = req.body
-        const parts = req.parts();
-        const data: { [key: string]: any } = {};
-        let photos;
-
-        for await (const part of parts) {
-            if (part.type === 'file') {
-                const uploadPath = path.join(__dirname, '../../public/assets/barang/', part.filename);
-                const writeStream = fs.createWriteStream(uploadPath);
-                await part.file.pipe(writeStream);
-                photos = uploadPath;
-            } else {
-                data[part.fieldname] = part.value;
-            }
-        }
+        const { id, name, code, status, condition, warranty, ruanganId, photo} = req.body
 
         const barang = await db
             .select()
