@@ -124,74 +124,60 @@ export const route = (instance: typeof server) => instance
         schema: {
             description: "create a new barang",
             tags: ["barangs"],
-            // headers: z.object({
-            //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            // }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
                 401: genericResponse(401)
             }
         },
-        // preHandler: authorizeUser
+        preHandler: authorizeUser
     }, async (req) => {
         const parts = req.parts();
-        let name: string = "";
-        let code: string = "";
-        let status: boolean = false;
-        let condition: string = "";
-        let warranty: string = "";
-        let ruanganId: number = 0;
+        const fields: Record<string, any> = {};
         let photoPath: string = "";
 
         for await (const part of parts) {
             if (part.type === 'field') {
-                switch (part.fieldname) {
-                    case 'name':
-                        name = String(part.value);
-                        break;
-                    case 'code':
-                        code = String(part.value);
-                        break;
-                    case 'status':
-                        status = part.value === 'true';
-                        break;
-                    case 'condition':
-                        condition = String(part.value);
-                        break;
-                    case 'warranty':
-                        warranty = new Date(String(part.value)).toISOString();
-                        break;
-                    case 'ruanganId':
-                        ruanganId = Number(part.value);
-                        break;
-                }
+                fields[part.fieldname] = part.value;
             } else if (part.type === 'file' && part.fieldname === 'image') {
                 const extension = path.extname(part.filename);
-                const newFileName = `${name}${extension}`;
+                const newFileName = `${fields.name}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
                 const writeStream = fs.createWriteStream(uploadPath);
-                await part.file.pipe(writeStream);
+                part.file.pipe(writeStream);
                 photoPath = uploadPath;
             }
         }
 
-        if (!name || !photoPath) {
+        if (!fields.name || !photoPath) {
             return {
-                message: "Name or file not provided",
+            message: "Name or file not provided",
+            statusCode: 400
+            }
+        }
+
+        let warrantyDate;
+        try {
+            warrantyDate = new Date(String(fields.warranty)).toISOString();
+        } catch (error) {
+            return {
+                message: "Invalid warranty date",
                 statusCode: 400
             }
         }
 
         await db.insert(barangs).values({
-            name,
-            code,
-            condition,
-            status,
-            warranty,
-            ruanganId,
+            name: String(fields.name),
+            code: String(fields.code),
+            condition: String(fields.condition),
+            status: fields.status === 'true',
+            warranty: warrantyDate,
+            ruanganId: Number(fields.ruanganId),
             createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
-            photo: name
+            photo: fields.name
         })
 
         return {
