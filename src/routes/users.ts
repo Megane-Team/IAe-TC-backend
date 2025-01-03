@@ -303,4 +303,54 @@ export const route = (instance: typeof server) => { instance
             message: "User updated successfully"
         };
     })
+    .delete("/:id", {
+        schema: {
+            description: "Delete a user by id",
+            tags: ["users"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const user = await db.select().from(users).where(eq(users.id, numId)).execute();
+
+        if (user.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const photoPath = path.join(import.meta.dirname, '../public/assets/user/', `${user[0].photo}.png`);
+        if (fs.existsSync(photoPath)) {
+            fs.unlinkSync(photoPath);
+        }
+
+        await db.delete(users).where(eq(users.id, numId)).execute();
+
+        return {
+            statusCode: 200,
+            message: "User deleted successfully"
+        };
+    })
 }

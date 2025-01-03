@@ -224,3 +224,53 @@ export const route = (instance: typeof server) => instance
             message: "Barang created successfully",
         };
     })
+    .delete("/:id", {
+        schema: {
+            description: "Delete a barang by id",
+            tags: ["barangs"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { id } = req.params;
+        const numberId = parseInt(id);
+
+        if (!numberId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const barang = await db.select().from(barangs).where(eq(barangs.id, numberId)).execute();
+
+        if (barang.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const photoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${barang[0].photo}.png`);
+        if (fs.existsSync(photoPath)) {
+            fs.unlinkSync(photoPath);
+        }
+
+        await db.delete(barangs).where(eq(barangs.id, numberId)).execute();
+
+        return {
+            statusCode: 200,
+            message: "Barang deleted successfully"
+        };
+    })
