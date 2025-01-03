@@ -8,6 +8,9 @@ import { logs } from "@/models/logs.ts";
 import { getUser } from "@/utils/getUser.ts";
 import argon2 from "argon2";
 import { perangkats } from "@/models/perangkat.ts";
+import { authorizeUser } from "@/utils/preHandlers.ts";
+import path from "path";
+import fs from "fs";
         
 export const prefix = "/users";
 export const route = (instance: typeof server) => { instance
@@ -59,17 +62,9 @@ export const route = (instance: typeof server) => { instance
                 401: genericResponse(401),
                 404: genericResponse(404)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
         const { id } = req.params;
         const numId = parseInt(id);
 
@@ -163,46 +158,149 @@ export const route = (instance: typeof server) => { instance
             token
         };
     })
-    .post("/register", {
+    .post("/", {
         schema: {
-            description: "Register user",
+            description: "Create a new user",
             tags: ["users"],
-            body: userSchema.insert.omit({ createdAt: true, id: true }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
             response: {
                 200: genericResponse(200),
-                400: genericResponse(400)
+                400: genericResponse(400),
+                401: genericResponse(401)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const parts = req.parts();
+        const fields: Record<string, any> = {};
+        let photoPath: string = "";
+
+        for await (const part of parts) {
+            if (part.type === 'field') {
+                fields[part.fieldname] = part.value;
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${fields.name}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/user/', newFileName);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+                photoPath = uploadPath;
             }
         }
-    }, async (req) => {
 
-        const { name, email, password, role, unit, phoneNumber, address, photo} = req.body;
-
-        const user = await db.select().from(users).where(eq(users.email, email!)).execute();
-
-        if (user.length > 0) {
+        if (!fields.name || !photoPath) {
             return {
-                statusCode: 400,
-                message: "Email already registered"
-            };
+            message: "Name or file not provided",
+            statusCode: 400
+            }
         }
 
-        const hashedPassword = await argon2.hash(password);
+        const hashedPassword = await argon2.hash(fields.password);
 
         await db.insert(users).values({
-            name: name,
-            email: email,
+            name: String(fields.name),
+            email: String(fields.email),
+            role: fields.role as "admin" || "user" || "headOffice",
+            unit: String(fields.unit),
+            address: String(fields.address),
             password: hashedPassword,
-            role: role,
-            unit: unit,
-            address: address,
-            phoneNumber: phoneNumber,
-            photo: photo,
+            photo: String(fields.name),
+            phoneNumber: String(fields.phoneNumber),
             createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
 
         return {
             statusCode: 200,
-            message: "Success"
+            message: "User created successfully"
+        };
+    })
+    .put("/:id", {
+        schema: {
+            description: "Update a user",
+            tags: ["users"],
+            params: z.object({
+                id: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { id } = req.params;
+        const numId = parseInt(id);
+
+        if (!numId) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const parts = req.parts();
+        const fields: Record<string, any> = {};
+        let photoPath: string = "";
+
+        for await (const part of parts) {
+            if (part.type === 'field') {
+                fields[part.fieldname] = part.value;
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${fields.name}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/user/', newFileName);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+                photoPath = uploadPath;
+            }
+        }
+
+        if (!fields.name) {
+            return {
+                message: "Name not provided",
+                statusCode: 400
+            }
+        }
+
+        const user = await db.select().from(users).where(eq(users.id, numId)).execute();
+
+        if (user.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const updateData: Record<string, any> = {
+            name: String(fields.name),
+            email: String(fields.email),
+            role: fields.role as "admin" || "user" || "headOffice",
+            unit: String(fields.unit),
+            address: String(fields.address),
+            phoneNumber: String(fields.phoneNumber),
+            updatedAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+        };
+
+        if (fields.password) {
+            updateData.password = await argon2.hash(fields.password);
+        }
+
+        if (photoPath) {
+            updateData.photo = String(fields.name);
+        }
+
+        await db.update(users).set(updateData).where(eq(users.id, numId)).execute();
+
+        return {
+            statusCode: 200,
+            message: "User updated successfully"
         };
     })
 }

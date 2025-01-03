@@ -2,7 +2,6 @@ import { genericResponse } from "@/constants.ts"
 import { server } from "@/index.ts"
 import { barangs, barangSchema } from "@/models/barangs.ts"
 import { db } from "@/modules/database.ts"
-import { getUser } from "@/utils/getUser.ts"
 import { eq } from "drizzle-orm"
 import path from "path"
 import { z } from "zod"
@@ -73,14 +72,16 @@ export const route = (instance: typeof server) => instance
             data: res[0]
         }
     })
-    .patch('/patch', {
+    .put('/:id', {
         schema: {
             description: "update barang",
             tags: ["barangs"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
-            body: barangSchema.select.omit({ createdAt: true }),
+            params: z.object({
+                id: z.string()
+            }),
             response: {
                 200: genericResponse(200),
                 400: genericResponse(400),
@@ -90,30 +91,68 @@ export const route = (instance: typeof server) => instance
         },
         preHandler: authorizeUser
     }, async (req) => {
-        const { id, name, code, status, condition, warranty, ruanganId, photo } = req.body
+        const parts = req.parts();
+        const fields: Record<string, any> = {};
+        let photoPath: string = "";
+
+        for await (const part of parts) {
+            if (part.type === 'field') {
+                fields[part.fieldname] = part.value;
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${fields.name}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+                photoPath = uploadPath;
+            }
+        }
+
+        if (!fields.name || !photoPath) {
+            return {
+            message: "Name or file not provided",
+            statusCode: 400
+            }
+        }
+
+        let warrantyDate;
+        try {
+            warrantyDate = new Date(String(fields.warranty)).toISOString();
+        } catch (error) {
+            return {
+                message: "Invalid warranty date",
+                statusCode: 400
+            }
+        }
+
+        const { id } = req.params
+        const numId = Number(id)
 
         const barang = await db
             .select()
             .from(barangs)
-            .where(eq(barangs.id, id))
+            .where(eq(barangs.id, numId))
+            .execute();
 
-        if (barang.length == 0) {
+        if (barang.length === 0) {
             return {
-                message: "Barang not found!",
+                message: "Barang not found",
                 statusCode: 404
             }
         }
 
         await db.update(barangs)
             .set({
-                name,
-                code,
-                status,
-                condition,
-                warranty,
-                photo,
-                ruanganId
+                name: String(fields.name),
+                code: String(fields.code),
+                condition: String(fields.condition),
+                status: fields.status === 'true',
+                warranty: warrantyDate,
+                ruanganId: Number(fields.ruanganId),
+                createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
+                photo: fields.name
             })
+            .where(eq(barangs.id, Number(fields.id)))
 
         return {
             message: "success",

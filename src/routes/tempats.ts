@@ -27,16 +27,9 @@ export const route = (instance: typeof server) => { instance
 
                 401: genericResponse(401)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
         const res = await db
             .select()
             .from(tempats)
@@ -65,17 +58,9 @@ export const route = (instance: typeof server) => { instance
 
                 401: genericResponse(401)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
         const { id } = req.params;
         const numberId = parseInt(id);
 
@@ -108,17 +93,9 @@ export const route = (instance: typeof server) => { instance
 
                 401: genericResponse(401)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
         const { id } = req.params
         const numberId = Number(id);
 
@@ -132,7 +109,6 @@ export const route = (instance: typeof server) => { instance
             message: 'Success',
             data: res
         }
-
     })
     .get("/:id/kendaraans", {
         schema: {
@@ -151,17 +127,9 @@ export const route = (instance: typeof server) => { instance
 
                 401: genericResponse(401)
             }
-        }
+        },
+        preHandler: authorizeUser
     }, async (req) => {
-        const actor = await getUser(req.headers["authorization"], instance);
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
         const { id } = req.params
         const numberId = Number(id);
 
@@ -175,6 +143,78 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Success",
             data: res
+        }
+    })
+    .put("/:id", {
+        schema: {
+            description: "Update a tempat",
+            tags: ["tempats"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                id: z.string()
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const parts = req.parts();
+        const fields: Record<string, any> = {};
+        let photoPath: string = "";
+
+        for await (const part of parts) {
+            if (part.type === 'field') {
+                fields[part.fieldname] = part.value;
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${fields.name}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/tempat/', newFileName);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+                photoPath = uploadPath;
+            }
+        }
+
+        if (!fields.name || !photoPath) {
+            return {
+                message: "Name or file not provided",
+                statusCode: 400
+            }
+        }
+
+        const { id } = req.params;
+        const numberId = parseInt(id);
+
+        const tempat = await db
+            .select()
+            .from(tempats)
+            .where(eq(tempats.id, numberId))
+            .execute();
+
+        if (tempat.length === 0) {
+            return {
+                message: "Tempat not found",
+                statusCode: 404
+            }
+        }
+
+        await db.update(tempats)
+            .set({
+                name: String(fields.name),
+                category: fields.category as "gedung" | "parkiran",
+                photo: photoPath
+            })
+            .where(eq(tempats.id, numberId));
+
+        return {
+            message: "Success",
+            statusCode: 200
         }
     })
     .post("/", {
