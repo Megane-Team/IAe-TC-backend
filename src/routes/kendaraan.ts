@@ -165,7 +165,7 @@ export const route = (instance: typeof server) => { instance
     .post("/", {
         schema: {
             description: "create a new barang",
-            tags: ["barangs"],
+            tags: ["kendaraans"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),

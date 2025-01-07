@@ -29,7 +29,7 @@ export const route = (instance: typeof server) => { instance
             }
         },
         preHandler: authorizeUser
-    }, async (req) => {
+    }, async () => {
         const res = await db
             .select()
             .from(tempats)
@@ -220,7 +220,7 @@ export const route = (instance: typeof server) => { instance
     .post("/", {
         schema: {
             description: "create a new barang",
-            tags: ["barangs"],
+            tags: ["tempats"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
