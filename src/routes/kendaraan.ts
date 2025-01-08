@@ -160,7 +160,7 @@ export const route = (instance: typeof server) => { instance
         return {
             message: "Success",
             statusCode: 200
-        }
+        }  
     })
     .post("/", {
         schema: {

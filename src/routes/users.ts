@@ -40,7 +40,7 @@ export const route = (instance: typeof server) => { instance
 
         return {
             statusCode: 200,
-            message: "Success",
+            message: "Success", 
             data: actor
         };
     })

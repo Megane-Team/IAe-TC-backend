@@ -469,25 +469,13 @@ export const route = (instance: typeof server) => { instance
         schema: {
             description: "Check detailPeminjaman status",
             tags: ["detailPeminjaman"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
             response: {
                 200: genericResponse(200),
                 401: genericResponse(401),
                 404: genericResponse(404)
             }
         }
-    }, async (req) => {
-        const actor = await getUser(req.headers['authorization'], instance)
-
-        if (!actor) {
-            return {
-                statusCode: 401,
-                message: "Unauthorized"
-            };
-        }
-
+    }, async () => {
         return await checkItemsStatus();
     })
     .post('/draft', {
