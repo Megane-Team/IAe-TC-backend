@@ -201,6 +201,7 @@ export const route = (instance: typeof server) => { instance
 
         await db.insert(users).values({
             name: String(fields.name),
+            nik: String(fields.nik),
             email: String(fields.email),
             role: fields.role as "admin" || "user" || "headOffice",
             unit: String(fields.unit),
