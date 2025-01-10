@@ -11,7 +11,7 @@ export async function checkAndInsertDefaultUser() {
     if (result.length === 0) {
         await db.insert(users).values({
             name: "User",
-            nik: "123456789010111",
+            nik: "123456789010112",
             email: "user@gmail.com",
             role: "user",
             unit: "HC 3000",
@@ -35,7 +35,7 @@ export async function checkAndInsertDefaultUser() {
         });
         await db.insert(users).values({
             name: "Head Office",
-            nik: "123456789010111",
+            nik: "123456789010113",
             email: "headOffice@gmail.com",
             role: "headOffice",
             unit: "HC 3000",
