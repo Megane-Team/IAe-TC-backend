@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS "barangs" (
 	"condition" text NOT NULL,
 	"warranty" date NOT NULL,
 	"photo" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"ruangan_id" integer NOT NULL
+	"ruangan_id" integer NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "detailPeminjamans" (
@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS "tempats" (
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
+	"nik" text NOT NULL,
 	"email" text,
 	"role" "role",
 	"unit" text NOT NULL,
@@ -114,6 +115,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"phone_number" text,
 	"password" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "users_nik_unique" UNIQUE("nik"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

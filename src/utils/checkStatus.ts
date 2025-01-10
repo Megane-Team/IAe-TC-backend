@@ -11,6 +11,8 @@ import { and, eq, lt } from "drizzle-orm";
 import { getMessaging } from "firebase-admin/messaging";
 
 export async function checkItemsStatus() {
+    checkStatus();
+
     const detailPeminjaman = await db
         .select()
         .from(detailPeminjamans)
@@ -119,4 +121,18 @@ export async function checkItemsStatus() {
         statusCode: 200,
         message: "Success",
     };
+}
+
+async function checkStatus() {
+    try {
+        const response = await fetch('http://192.168.1.112:8000/api/checkstatus', {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }

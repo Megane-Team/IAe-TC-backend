@@ -1,5 +1,5 @@
 {
-  "id": "74ed6399-b79d-4df4-a9f9-753d6b504d02",
+  "id": "ca22be7a-8e2d-4a09-9428-9ac82fffed0c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -62,18 +62,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "ruangan_id": {
+          "name": "ruangan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "ruangan_id": {
-          "name": "ruangan_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {},
@@ -876,6 +876,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "nik": {
+          "name": "nik",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "email": {
           "name": "email",
           "type": "text",
@@ -931,6 +937,13 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "users_nik_unique": {
+          "name": "users_nik_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nik"
+          ]
+        },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,

@@ -1,1 +1,0 @@
-ALTER TABLE "users" ADD COLUMN "nik" text NOT NULL;

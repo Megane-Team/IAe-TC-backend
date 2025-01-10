@@ -12,7 +12,6 @@ import fjwt from '@fastify/jwt'
 import fCookie from '@fastify/cookie'
 import fstatic from '@fastify/static'
 import fastifyMultipart from '@fastify/multipart'
-import { checkAndInsertDefaultUser } from "./utils/defaultData.ts";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
 import cron from 'node-cron'
 import { checkItemsStatus } from "./utils/checkStatus.ts";
@@ -41,11 +40,7 @@ try {
     await migrationClient.connect();
     await migrate(drizzle(migrationClient, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
     server.log.warn("Database migrated successfully");
-
-    if ( await checkAndInsertDefaultUser() ) {
-        server.log.warn("Default user inserted successfully");
-    }
-
+    
     await migrationClient.end();
 }
 catch (error) {
@@ -133,8 +128,8 @@ server.register(fstatic, {
 })
 
 // cron
-cron.schedule('0 */6 * * *', async () => {
-    console.log('Running checkItemsStatus every 6 hours');
+cron.schedule('0 */3 * * *', async () => {
+    console.log('Running checkItemsStatus every 3 hours');
     await checkItemsStatus();
 });
 
