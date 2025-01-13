@@ -7,6 +7,8 @@ import { peminjamans } from "@/models/peminjamans.ts";
 import { ruangans } from "@/models/ruangans.ts";
 import { tempats } from "@/models/tempat.ts";
 import { db } from "@/modules/database.ts";
+import argon2 from "argon2";
+import { z } from "zod";
 
 export const prefix = "/dummyData";
 export const route = (instance: typeof server) => { instance
@@ -214,6 +216,26 @@ export const route = (instance: typeof server) => { instance
 
         return {
             message: "success",
+            statusCode: 200
+        }
+    })
+    .post("/hashPassword", {
+        schema: {
+            description: "hashing password",
+            tags: ["dummyData"],
+            body: z.object({
+                password: z.string()
+            }),
+            response: {
+                200: genericResponse(200)
+            }
+        }
+    }, async (req) => {
+        const { password } = req.body;  
+
+        const hashedPassword = await argon2.hash(password);
+        return {
+            message: hashedPassword,
             statusCode: 200
         }
     })

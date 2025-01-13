@@ -1,3 +1,4 @@
+import { webUrl } from "@/config.ts";
 import { barangs } from "@/models/barangs.ts";
 import { detailPeminjamans } from "@/models/detailPeminjamans.ts";
 import { kendaraans } from "@/models/kendaraans.ts";
@@ -125,7 +126,7 @@ export async function checkItemsStatus() {
 
 async function checkStatus() {
     try {
-        const response = await fetch('http://192.168.1.112:8000/api/checkstatus', {
+        const response = await fetch(`${webUrl}/api/checkstatus`, {
             method: 'GET',
         });
 
