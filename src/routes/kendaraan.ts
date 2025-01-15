@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import path from "path";
 import { z } from "zod";
 import fs from 'fs';
+import { tempats } from "@/models/tempat.ts";
 
 export const prefix = "/kendaraans";
 export const route = (instance: typeof server) => { instance
@@ -73,98 +74,9 @@ export const route = (instance: typeof server) => { instance
             data: res[0]
         }
     })
-    .put("/:id", {
-        schema: {
-            description: "update kendaraan",
-            tags: ["kendaraans"],
-            headers: z.object({
-                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            }),
-            params: z.object({
-                id: z.string()
-            }),
-            response: {
-                200: genericResponse(200),
-                400: genericResponse(400),
-                401: genericResponse(401),
-                404: genericResponse(404)
-            }
-        },
-        preHandler: authorizeUser
-    }, async (req) => {
-        const { id } = req.params;
-        const numberId = parseInt(id);
-
-        const parts = req.parts();
-        const fields: Record<string, any> = {};
-        let photoPath: string = "";
-
-        for await (const part of parts) {
-            if (part.type === 'field') {
-                fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
-                const extension = path.extname(part.filename);
-                const newFileName = `${fields.name}${extension}`;
-                const uploadPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', newFileName);
-                const writeStream = fs.createWriteStream(uploadPath);
-                part.file.pipe(writeStream);
-                photoPath = uploadPath;
-            }
-        }
-
-        if (!fields.name || !photoPath) {
-            return {
-                message: "Name or file not provided",
-                statusCode: 400
-            }
-        }
-
-        let warrantyDate;
-        try {
-            warrantyDate = new Date(String(fields.warranty)).toISOString();
-        } catch (error) {
-            return {
-                message: "Invalid warranty date",
-                statusCode: 400
-            }
-        }
-
-        const kendaraan = await db
-            .select()
-            .from(kendaraans)
-            .where(eq(kendaraans.id, numberId))
-
-        if (kendaraan.length === 0) {
-            return {
-                message: "Kendaraan not found",
-                statusCode: 404
-            }
-        }
-
-        await db.update(kendaraans)
-            .set({
-                name: String(fields.name),
-                plat: String(fields.plat),
-                condition: String(fields.condition),
-                status: fields.status === 'true',
-                warranty: warrantyDate,
-                capacity: Number(fields.capacity),
-                category: fields.category as "mobil" | "motor" | "truk",
-                color: String(fields.color),
-                tax: new Date(String(fields.tax)).toISOString(),
-                photo: fields.name,
-                tempatId: Number(fields.tempatId)
-            })
-            .where(eq(kendaraans.id, numberId));
-
-        return {
-            message: "Success",
-            statusCode: 200
-        }  
-    })
     .post("/", {
         schema: {
-            description: "create a new barang",
+            description: "create a new kendaraan",
             tags: ["kendaraans"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -184,10 +96,10 @@ export const route = (instance: typeof server) => { instance
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
                 const newFileName = `${fields.name}${extension}`;
-                const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', newFileName);
                 const writeStream = fs.createWriteStream(uploadPath);
                 part.file.pipe(writeStream);
                 photoPath = uploadPath;
@@ -203,7 +115,113 @@ export const route = (instance: typeof server) => { instance
 
         let warrantyDate;
         try {
-            warrantyDate = new Date(String(fields.warranty)).toISOString();
+            const [wDay, wMonth, wYear] = fields.warranty.split('-');
+            warrantyDate = new Date(`${wYear}-${wMonth}-${wDay}`).toISOString();
+        } catch (error) {
+            return {
+            message: "Invalid warranty date",
+            statusCode: 400
+            }
+        }
+
+        let taxDate;
+        try {
+            const [tDay, tMonth, tYear] = fields.tax.split('-');
+            taxDate = new Date(`${tYear}-${tMonth}-${tDay}`).toISOString();
+        } catch (error) {
+            return {
+            message: "Invalid tax date",
+            statusCode: 400
+            }
+        }
+
+        const tempat = await db
+            .select()
+            .from(tempats)
+            .where(eq(tempats.name, fields.tempat_name))
+            .execute()
+            .then((res) => res[0]);
+
+        await db.insert(kendaraans).values({
+            name: fields.name,
+            plat: fields.plat,
+            condition: fields.condition,
+            status: fields.status === 'true',
+            warranty: warrantyDate,
+            capacity: Number(fields.capacity),
+            category: fields.category as "mobil" | "motor" | "truk",
+            color: fields.color,
+            tax: taxDate,
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
+            photo: fields.name,
+            tempatId: tempat.id
+        })
+
+        return {
+            statusCode: 200,
+            message: "Kendaraan created successfully",
+        }
+    })
+    .put('/:plat', {
+        schema: {
+            description: "Update a kendaraan",
+            tags: ["kendaraans"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                plat: z.string()
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const parts = req.parts();
+        const fields: Record<string, any> = {};
+        const { plat } = req.params;
+
+        for await (const part of parts) {
+            if (part.type === 'field') {
+                fields[part.fieldname] = part.value;
+            } else if (part.type === 'file' && part.fieldname === 'image') {
+                const extension = path.extname(part.filename);
+                const newFileName = `${fields.plat}${extension}`;
+                const uploadPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', newFileName);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+            }
+        }
+
+        const kendaraan = await db
+            .select()
+            .from(kendaraans)
+            .where(eq(kendaraans.plat, plat))
+            .execute();
+
+        if (kendaraan.length === 0) {
+            return {
+                message: "Kendaraan not found",
+                statusCode: 404
+            }
+        }
+
+        if (typeof fields.plat === 'string' && fields.play !== kendaraan[0].plat) {
+            const oldPhotoPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', `${kendaraan[0].photo}.png`);
+            const newPhotoPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', `${fields.plat}.png`);
+            if (fs.existsSync(oldPhotoPath)) {
+                await fs.promises.rename(oldPhotoPath, newPhotoPath);
+            }
+        }
+
+        let warrantyDate;
+        try {
+            const [day, month, year] = fields.warranty.split('-');
+            warrantyDate = new Date(`${year}-${month}-${day}`).toISOString();
         } catch (error) {
             return {
                 message: "Invalid warranty date",
@@ -211,24 +229,153 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        await db.insert(kendaraans).values({
-            name: String(fields.name),
-            plat: String(fields.plat),
-            condition: String(fields.condition),
-            status: fields.status === 'true',
-            warranty: warrantyDate,
-            capacity: Number(fields.capacity),
-            category: fields.category as "mobil" | "motor" | "truk",
-            color: String(fields.color),
-            tax: new Date(String(fields.tax)).toISOString(),
-            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
-            photo: fields.name,
-            tempatId: Number(fields.tempatId)
-        })
+        let taxDate;
+        try {
+            const [day, month, year] = fields.tax.split('-');
+            taxDate = new Date(`${year}-${month}-${day}`).toISOString();
+        } catch (error) {
+            return {
+                message: "Invalid tax date",
+                statusCode: 400
+            }
+        }
+
+        const tempat = await db
+            .select()
+            .from(tempats)
+            .where(eq(tempats.name, fields.tempat_name))
+            .execute()
+            .then((res) => res[0]);
+
+        await db.update(kendaraans)
+            .set({
+                name: fields.name || kendaraan[0].name,
+                plat: fields.plat || kendaraan[0].plat,
+                condition: fields.condition || kendaraan[0].condition,
+                status: fields.status === 'true' || kendaraan[0].status,
+                warranty: warrantyDate || kendaraan[0].warranty,
+                capacity: Number(fields.capacity) || kendaraan[0].capacity,
+                category: fields.category as "mobil" | "motor" | "truk" || kendaraan[0].category,
+                color: fields.color || kendaraan[0].color,
+                tax: taxDate || kendaraan[0].tax,
+                tempatId: tempat.id || kendaraan[0].tempatId,
+                photo: fields.name || kendaraan[0].photo
+            })
+            .where(eq(kendaraans.plat, plat));
+
+        return {
+            message: "Success",
+            statusCode: 200
+        }
+    })
+    .delete("/:plat", {
+        schema: {
+            description: "Delete a kendaraan by plat",
+            tags: ["kendaraans"],
+            params: z.object({
+                plat: z.string()
+            }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { plat } = req.params;
+
+        if (!plat) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        const kendaraan = await db.select().from(kendaraans).where(eq(kendaraans.plat, plat)).execute();
+
+        if (kendaraan.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        const photoPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', `${kendaraan[0].photo}.png`);
+        if (fs.existsSync(photoPath)) {
+            fs.unlinkSync(photoPath);
+        }
+
+        await db.delete(kendaraans).where(eq(kendaraans.plat, plat)).execute();
 
         return {
             statusCode: 200,
-            message: "Barang created successfully",
+            message: "Kendaraan deleted successfully"
+        };
+    })
+    .delete("/bulk", {
+        schema: {
+            description: "Delete multiple kendaraans by plat",
+            tags: ["kendaraans"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: z.object({
+                plats: z.array(z.string())
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { plats } = req.body;
+
+        if (!plats || plats.length === 0) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
         }
-    });
+
+        for (const plat of plats) {
+            if (!plat) {
+                return {
+                    statusCode: 400,
+                    message: "Bad request"
+                };
+            }
+
+            const kendaraanToDelete = await db
+                .select()
+                .from(kendaraans)
+                .where(eq(kendaraans.plat, plat)).execute().then((res) => res[0]);
+
+            if (!kendaraanToDelete) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
+            const photoPath = path.join(import.meta.dirname, '../public/assets/kendaraan/', `${kendaraanToDelete.photo}.png`);
+            if (fs.existsSync(photoPath)) {
+                fs.unlinkSync(photoPath);
+            }
+
+            await db.delete(kendaraans).where(eq(kendaraans.plat, plat)).execute();
+        }
+
+        return {
+            statusCode: 200,
+            message: "Kendaraans deleted successfully"
+        };
+    })
 }
