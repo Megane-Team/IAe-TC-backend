@@ -4,12 +4,12 @@ import { kendaraans, kendaraanSchema } from "@/models/kendaraans.ts";
 import { ruangans, ruanganSchema } from "@/models/ruangans.ts";
 import { tempats, tempatSchema } from "@/models/tempat.ts";
 import { db } from "@/modules/database.ts";
-import { getUser } from "@/utils/getUser.ts";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import fs from 'fs';
 import path from 'path';
 import { authorizeUser } from "@/utils/preHandlers.ts";
+import ExcelJS from 'exceljs';
 
 export const prefix = "/tempats";
 export const route = (instance: typeof server) => { instance
@@ -376,6 +376,85 @@ export const route = (instance: typeof server) => { instance
             statusCode: 200,
             message: "Tempats deleted successfully"
         };
+    })
+    .post("/import", {
+        schema: {
+            description: "Import tempats from an xlsx file",
+            tags: ["tempats"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const parts = req.parts();
+        let filePath: string = "";
 
+        for await (const part of parts) {
+            if (part.type === 'file' && part.fieldname === 'file') {
+                const uploadPath = path.join(import.meta.dirname, '../uploads/', part.filename);
+                const writeStream = fs.createWriteStream(uploadPath);
+                part.file.pipe(writeStream);
+                filePath = uploadPath;
+            }
+        }
+
+        if (!filePath) {
+            return {
+                statusCode: 400,
+                message: "File not provided"
+            };
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(filePath);
+        const worksheet = workbook.getWorksheet(1);
+
+        worksheet?.getImages().forEach((image, index) => {
+            const media = workbook.model.media?.find((media: any) => media.index === image.imageId);
+            if (!media) {
+                throw new Error(`Media with imageId ${image.imageId} not found`);
+            }
+            const imageBuffer = media.buffer;
+            const imageName = `image${index + 1}.png`;
+            const imagePath = path.join(import.meta.dirname, '../public/assets/tempat/', imageName);
+    
+            fs.writeFileSync(imagePath, new Uint8Array(imageBuffer)); // Save the image to the file system
+        });
+
+        worksheet?.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) {
+                const values = row.values as any[];
+                const [name, category] = values.slice(1, 3);
+            
+                if (name && category) {
+                    const newPhotoName = `${name}.png`;
+                    const photoPath = path.join(import.meta.dirname, '../public/assets/tempat/', newPhotoName);
+            
+                    db.insert(tempats).values({
+                        name: name,
+                        category: category as "gedung" | "parkiran",
+                        photo: name,
+                        createdAt: new Date()
+                    }).execute();
+
+                    const imageName = `image${rowNumber - 1}.png`;
+
+                    fs.renameSync(path.join(import.meta.dirname, '../public/assets/tempat/', imageName), photoPath);
+                }
+            }
+        });
+
+        fs.unlinkSync(filePath);
+
+        return {
+            statusCode: 200,
+            message: "Tempats imported successfully"
+        };
     })
 }
