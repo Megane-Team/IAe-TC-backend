@@ -394,20 +394,23 @@ export const route = (instance: typeof server) => { instance
     }, async (req) => {
         const parts = req.parts();
         let filePath: string = "";
-
         for await (const part of parts) {
             if (part.type === 'file' && part.fieldname === 'file') {
-                const uploadPath = path.join(import.meta.dirname, '../uploads/', part.filename);
-                const writeStream = fs.createWriteStream(uploadPath);
-                part.file.pipe(writeStream);
-                filePath = uploadPath;
+            const uploadPath = path.join(import.meta.dirname, '../uploads/', part.filename);
+            const writeStream = fs.createWriteStream(uploadPath);
+            part.file.pipe(writeStream);
+            await new Promise((resolve, reject) => {
+                writeStream.on('finish', resolve);
+                writeStream.on('error', reject);
+            });
+            filePath = uploadPath;
             }
         }
 
         if (!filePath) {
             return {
-                statusCode: 400,
-                message: "File not provided"
+            statusCode: 400,
+            message: "File not provided"
             };
         }
 
