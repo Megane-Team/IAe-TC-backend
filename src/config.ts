@@ -6,7 +6,6 @@ export const databaseUrl = process.env.DATABASE_URL;
 export const databaseMaxPool = Number(process.env.DATABASE_MAX_POOL || 50);
 
 export const secretToken = process.env.JWT_SECRET;
-export const defaultPassword = process.env.DEFAULT_PASSWORD;
 
 if (!databaseUrl) {
     throw new Error("DATABASE_URL must be provided");
