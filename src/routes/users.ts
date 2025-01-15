@@ -180,9 +180,9 @@ export const route = (instance: typeof server) => { instance
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
-                const newFileName = `${fields.name}${extension}`;
+                const newFileName = `${fields.nik}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/user/', newFileName);
                 const writeStream = fs.createWriteStream(uploadPath);
                 part.file.pipe(writeStream);
@@ -200,15 +200,15 @@ export const route = (instance: typeof server) => { instance
         const hashedPassword = await argon2.hash(fields.password);
 
         await db.insert(users).values({
-            name: String(fields.name),
-            nik: String(fields.nik),
-            email: String(fields.email),
+            name: fields.name,
+            email: fields.email,
+            nik: fields.nik,
             role: fields.role as "admin" || "user" || "headOffice",
-            unit: String(fields.unit),
-            address: String(fields.address),
+            unit: fields.unit,
+            address: fields.address,
             password: hashedPassword,
-            photo: String(fields.name),
-            phoneNumber: String(fields.phoneNumber),
+            photo: fields.name,
+            phoneNumber: fields.phoneNumber,
             createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
         }).execute();
 
@@ -217,15 +217,15 @@ export const route = (instance: typeof server) => { instance
             message: "User created successfully"
         };
     })
-    .put("/:id", {
+    .put("/:nik", {
         schema: {
             description: "Update a user",
             tags: ["users"],
-            params: z.object({
-                id: z.string()
-            }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            params: z.object({
+                nik: z.string()
             }),
             response: {
                 200: genericResponse(200),
@@ -236,26 +236,17 @@ export const route = (instance: typeof server) => { instance
         },
         preHandler: authorizeUser
     }, async (req) => {
-        const { id } = req.params;
-        const numId = parseInt(id);
-
-        if (!numId) {
-            return {
-                statusCode: 400,
-                message: "Bad request"
-            };
-        }
-
         const parts = req.parts();
         const fields: Record<string, any> = {};
+        const { nik } = req.params;
         let photoPath: string = "";
 
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
-                const newFileName = `${fields.name}${extension}`;
+                const newFileName = `${fields.nik}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/user/', newFileName);
                 const writeStream = fs.createWriteStream(uploadPath);
                 part.file.pipe(writeStream);
@@ -263,53 +254,51 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        if (!fields.name) {
-            return {
-                message: "Name not provided",
-                statusCode: 400
-            }
-        }
-
-        const user = await db.select().from(users).where(eq(users.id, numId)).execute();
+        const user = await db.select().from(users).where(eq(users.nik, nik)).execute();
 
         if (user.length === 0) {
             return {
                 statusCode: 404,
-                message: "Not found"
+                message: "User not found"
             };
         }
 
-        const updateData: Record<string, any> = {
-            name: String(fields.name),
-            email: String(fields.email),
-            role: fields.role as "admin" || "user" || "headOffice",
-            unit: String(fields.unit),
-            address: String(fields.address),
-            phoneNumber: String(fields.phoneNumber),
-            updatedAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
-        };
-
-        if (fields.password) {
-            updateData.password = await argon2.hash(fields.password);
+        if (typeof fields.nik === 'string' && fields.nik !== user[0].nik) {
+            const oldPhotoPath = path.join(import.meta.dirname, '../public/assets/user/', `${user[0].photo}.png`);
+            const newPhotoPath = path.join(import.meta.dirname, '../public/assets/user/', `${fields.nik}.png`);
+            if (fs.existsSync(oldPhotoPath)) {
+                await fs.promises.rename(oldPhotoPath, newPhotoPath);
+            }
         }
 
-        if (photoPath) {
-            updateData.photo = String(fields.name);
-        }
+        const hashedPassword = fields.password ? await argon2.hash(fields.password) : user[0].password;
 
-        await db.update(users).set(updateData).where(eq(users.id, numId)).execute();
+        await db.update(users)
+            .set({
+                name: fields.name || user[0].name,
+                email: fields.email || user[0].email,
+                nik: fields.nik || user[0].nik,
+                role: fields.role || user[0].role,
+                unit: fields.unit || user[0].unit,
+                address: fields.address || user[0].address,
+                password: hashedPassword,
+                photo: fields.name || user[0].photo,
+                phoneNumber: fields.phoneNumber || user[0].phoneNumber
+            })
+            .where(eq(users.nik, nik))
+            .execute();
 
         return {
             statusCode: 200,
             message: "User updated successfully"
         };
     })
-    .delete("/:id", {
+    .delete("/:nik", {
         schema: {
-            description: "Delete a user by id",
+            description: "Delete a user by NIK",
             tags: ["users"],
             params: z.object({
-                id: z.string()
+                nik: z.string()
             }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -323,17 +312,16 @@ export const route = (instance: typeof server) => { instance
         },
         preHandler: authorizeUser
     }, async (req) => {
-        const { id } = req.params;
-        const numId = parseInt(id);
+        const { nik } = req.params;
 
-        if (!numId) {
+        if (!nik) {
             return {
                 statusCode: 400,
                 message: "Bad request"
             };
         }
 
-        const user = await db.select().from(users).where(eq(users.id, numId)).execute();
+        const user = await db.select().from(users).where(eq(users.nik, nik)).execute();
 
         if (user.length === 0) {
             return {
@@ -347,11 +335,72 @@ export const route = (instance: typeof server) => { instance
             fs.unlinkSync(photoPath);
         }
 
-        await db.delete(users).where(eq(users.id, numId)).execute();
+        await db.delete(users).where(eq(users.nik, nik)).execute();
 
         return {
             statusCode: 200,
             message: "User deleted successfully"
+        };
+    })
+    .delete("/bulk", {
+        schema: {
+            description: "Delete multiple users by NIK",
+            tags: ["users"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: z.object({
+                niks: z.array(z.string())
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { niks } = req.body;
+
+        if (!niks || niks.length === 0) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        for (const nik of niks) {
+            if (!nik) {
+                return {
+                    statusCode: 400,
+                    message: "Bad request"
+                };
+            }
+
+            const userToDelete = await db
+                .select()
+                .from(users)
+                .where(eq(users.nik, nik)).execute().then((res) => res[0]);
+
+            if (!userToDelete) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
+            const photoPath = path.join(import.meta.dirname, '../public/assets/user/', `${userToDelete.photo}.png`);
+            if (fs.existsSync(photoPath)) {
+                fs.unlinkSync(photoPath);
+            }
+
+            await db.delete(users).where(eq(users.nik, nik)).execute();
+        }
+
+        return {
+            statusCode: 200,
+            message: "Users deleted successfully"
         };
     })
 }
