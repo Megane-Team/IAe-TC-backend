@@ -131,3 +131,9 @@ dist
 .pnp.*
 
 inventara-backend-notification-firebase-adminsdk-oqcmw-54fa96141a.json
+
+src/public/assets/barang/*
+src/public/assets/kendaraan/*
+src/public/assets/ruangan/*
+src/public/assets/tempat/*
+src/public/assets/user/*
