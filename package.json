@@ -32,7 +32,6 @@
     "pino-pretty": "^11.3.0",
     "pnpm": "^9.12.3",
     "statuses": "^2.0.1",
-    "xlsx-populate": "^1.21.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
