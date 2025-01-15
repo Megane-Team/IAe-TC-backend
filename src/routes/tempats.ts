@@ -145,7 +145,7 @@ export const route = (instance: typeof server) => { instance
             data: res
         }
     })
-    .put("/:id", {
+    .put("/:name", {
         schema: {
             description: "Update a tempat",
             tags: ["tempats"],
@@ -153,7 +153,7 @@ export const route = (instance: typeof server) => { instance
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
             params: z.object({
-                id: z.string()
+                name: z.string()
             }),
             response: {
                 200: genericResponse(200),
@@ -167,11 +167,12 @@ export const route = (instance: typeof server) => { instance
         const parts = req.parts();
         const fields: Record<string, any> = {};
         let photoPath: string = "";
+        const { name } = req.params;
 
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
                 const newFileName = `${fields.name}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/tempat/', newFileName);
@@ -181,36 +182,34 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        if (!fields.name || !photoPath) {
-            return {
-                message: "Name or file not provided",
-                statusCode: 400
-            }
-        }
-
-        const { id } = req.params;
-        const numberId = parseInt(id);
-
         const tempat = await db
             .select()
             .from(tempats)
-            .where(eq(tempats.id, numberId))
+            .where(eq(tempats.name, name))
             .execute();
 
         if (tempat.length === 0) {
             return {
-                message: "Tempat not found",
-                statusCode: 404
+            message: "Tempat not found",
+            statusCode: 404
+            }
+        }
+
+        if (typeof fields.name === 'string' && fields.name !== tempat[0].name) {
+            const oldPhotoPath = path.join(import.meta.dirname, '../public/assets/tempat/', `${tempat[0].photo}.png`);
+            const newPhotoPath = path.join(import.meta.dirname, '../public/assets/tempat/', `${fields.name}.png`);
+            if (fs.existsSync(oldPhotoPath)) {
+                await fs.promises.rename(oldPhotoPath, newPhotoPath);
             }
         }
 
         await db.update(tempats)
             .set({
-                name: String(fields.name),
-                category: fields.category as "gedung" | "parkiran",
-                photo: photoPath
+            name: fields.name || tempat[0].name,
+            category: fields.category as "gedung" | "parkiran" || tempat[0].category,
+            photo: fields.name || tempat[0].name,
             })
-            .where(eq(tempats.id, numberId));
+            .where(eq(tempats.name, name));
 
         return {
             message: "Success",
@@ -219,7 +218,7 @@ export const route = (instance: typeof server) => { instance
     })
     .post("/", {
         schema: {
-            description: "create a new barang",
+            description: "create a new Tempat",
             tags: ["tempats"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -239,7 +238,7 @@ export const route = (instance: typeof server) => { instance
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
                 const newFileName = `${fields.name}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/tempat/', newFileName);
@@ -259,21 +258,21 @@ export const route = (instance: typeof server) => { instance
         await db.insert(tempats).values({
             name: String(fields.name),
             category: fields.category as "gedung" || "parkiran",
-            photo: photoPath,
+            photo: fields.name,
             createdAt: new Date()
         })
 
         return {
             statusCode: 200,
-            message: "Barang created successfully",
+            message: "Tempat created successfully",
         };
     })
-    .delete("/:id", {
+    .delete("/:name", {
         schema: {
             description: "Delete a tempat by id",
-            tags: ["Ruangan"],
+            tags: ["tempats"],
             params: z.object({
-                id: z.string()
+                name: z.string()
             }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -287,17 +286,16 @@ export const route = (instance: typeof server) => { instance
         },
         preHandler: authorizeUser
     }, async (req) => {
-        const { id } = req.params;
-        const numberId = parseInt(id);
+        const { name } = req.params;
 
-        if (!numberId) {
+        if (!name) {
             return {
                 statusCode: 400,
                 message: "Bad request"
             };
         }
 
-        const tempat = await db.select().from(tempats).where(eq(tempats.id, numberId)).execute();
+        const tempat = await db.select().from(tempats).where(eq(tempats.name, name)).execute();
 
         if (tempat.length === 0) {
             return {
@@ -311,12 +309,73 @@ export const route = (instance: typeof server) => { instance
             fs.unlinkSync(photoPath);
         }
 
-        await db.delete(tempats).where(eq(tempats.id, numberId)).execute();
+        await db.delete(tempats).where(eq(tempats.name, name)).execute();
 
         return {
             statusCode: 200,
             message: "Tempat deleted successfully"
         };
     })
-    
+    .delete("/bulk", {
+        schema: {
+            description: "Delete multiple tempat by name",
+            tags: ["tempats"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: z.object({
+                names: z.array(z.string())
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { names } = req.body;
+
+        if (!names || names.length === 0) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        for (const name of names) {
+            if (!name) {
+                return {
+                    statusCode: 400,
+                    message: "Bad request"
+                };
+            }
+
+            const tempatToDelete = await db
+                .select()
+                .from(tempats)
+                .where(eq(tempats.name, name)).execute().then((res) => res[0]);
+
+            if (!tempatToDelete) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
+            const photoPath = path.join(import.meta.dirname, '../public/assets/tempat/', `${tempatToDelete.photo}.png`);
+            if (fs.existsSync(photoPath)) {
+                fs.unlinkSync(photoPath);
+            }
+        
+            await db.delete(tempats).where(eq(tempats.name, name)).execute();
+        }
+
+        return {
+            statusCode: 200,
+            message: "Tempats deleted successfully"
+        };
+
+    })
 }
