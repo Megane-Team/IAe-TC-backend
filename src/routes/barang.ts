@@ -7,6 +7,7 @@ import path from "path"
 import { z } from "zod"
 import fs from 'fs';
 import { authorizeUser } from "@/utils/preHandlers.ts"
+import { ruangans } from "@/models/ruangans.ts"
 
 export const prefix = "/barangs"
 export const route = (instance: typeof server) => instance
@@ -72,15 +73,15 @@ export const route = (instance: typeof server) => instance
             data: res[0]
         }
     })
-    .put('/:id', {
+    .put('/:code', {
         schema: {
-            description: "update barang",
+            description: "Update a barang",
             tags: ["barangs"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
             }),
             params: z.object({
-                id: z.string()
+                code: z.string()
             }),
             response: {
                 200: genericResponse(200),
@@ -93,12 +94,13 @@ export const route = (instance: typeof server) => instance
     }, async (req) => {
         const parts = req.parts();
         const fields: Record<string, any> = {};
+        const { code } = req.params;
         let photoPath: string = "";
 
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
                 const newFileName = `${fields.name}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
@@ -108,30 +110,10 @@ export const route = (instance: typeof server) => instance
             }
         }
 
-        if (!fields.name || !photoPath) {
-            return {
-            message: "Name or file not provided",
-            statusCode: 400
-            }
-        }
-
-        let warrantyDate;
-        try {
-            warrantyDate = new Date(String(fields.warranty)).toISOString();
-        } catch (error) {
-            return {
-                message: "Invalid warranty date",
-                statusCode: 400
-            }
-        }
-
-        const { id } = req.params
-        const numId = Number(id)
-
         const barang = await db
             .select()
             .from(barangs)
-            .where(eq(barangs.id, numId))
+            .where(eq(barangs.code, code))
             .execute();
 
         if (barang.length === 0) {
@@ -141,27 +123,59 @@ export const route = (instance: typeof server) => instance
             }
         }
 
+        if (typeof fields.name === 'string' && fields.name !== barang[0].name) {
+            const oldPhotoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${barang[0].photo}.png`);
+            const newPhotoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${fields.name}.png`);
+            if (fs.existsSync(oldPhotoPath)) {
+                await fs.promises.rename(oldPhotoPath, newPhotoPath);
+            }
+        }
+
+        let warrantyDate;
+        try {
+            const [day, month, year] = fields.warranty.split('-');
+            warrantyDate = new Date(`${year}-${month}-${day}`).toISOString();
+        } catch (error) {
+            return {
+            message: "Invalid warranty date",
+            statusCode: 400
+            }
+        }
+
+        const ruangan = await db
+            .select()
+            .from(ruangans)
+            .where(eq(ruangans.code, fields.ruangan_code))
+            .execute()
+            .then((res) => res[0]);
+
+        const realRuangan = await db
+            .select()
+            .from(ruangans)
+            .where(eq(ruangans.code, fields.ruangan_code || ruangan.code))
+            .execute()
+            .then((res) => res[0]);
+
         await db.update(barangs)
             .set({
-                name: String(fields.name),
-                code: String(fields.code),
-                condition: String(fields.condition),
-                status: fields.status === 'true',
-                warranty: warrantyDate,
-                ruanganId: Number(fields.ruanganId),
-                createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
-                photo: fields.name
+                name: fields.name || barang[0].name,
+                code: fields.code || barang[0].code,
+                condition: fields.condition || barang[0].condition,
+                status: fields.status === 'true' || barang[0].status,
+                warranty: warrantyDate || barang[0].warranty,
+                ruanganId: realRuangan.id || barang[0].ruanganId,
+                photo: fields.name || barang[0].photo
             })
-            .where(eq(barangs.id, Number(fields.id)))
+            .where(eq(barangs.code, code));
 
         return {
-            message: "success",
+            message: "Success",
             statusCode: 200
         }
     })
     .post("/", {
         schema: {
-            description: "create a new barang",
+            description: "Create a new barang",
             tags: ["barangs"],
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -181,7 +195,7 @@ export const route = (instance: typeof server) => instance
         for await (const part of parts) {
             if (part.type === 'field') {
                 fields[part.fieldname] = part.value;
-            } else if (part.type === 'file' && part.fieldname === 'image') {
+            } else if (part.type === 'file' && part.fieldname === 'photo') {
                 const extension = path.extname(part.filename);
                 const newFileName = `${fields.name}${extension}`;
                 const uploadPath = path.join(import.meta.dirname, '../public/assets/barang/', newFileName);
@@ -193,28 +207,38 @@ export const route = (instance: typeof server) => instance
 
         if (!fields.name || !photoPath) {
             return {
-            message: "Name or file not provided",
-            statusCode: 400
-            }
-        }
-
-        let warrantyDate;
-        try {
-            warrantyDate = new Date(String(fields.warranty)).toISOString();
-        } catch (error) {
-            return {
-                message: "Invalid warranty date",
+                message: "Name or file not provided",
                 statusCode: 400
             }
         }
 
+        console.log(fields);
+
+        let warrantyDate;
+        try {
+            const [day, month, year] = fields.warranty.split('-');
+            warrantyDate = new Date(`${year}-${month}-${day}`).toISOString();
+        } catch (error) {
+            return {
+            message: "Invalid warranty date",
+            statusCode: 400
+            }
+        }
+
+        const ruangan = await db
+            .select()
+            .from(ruangans)
+            .where(eq(ruangans.code, fields.ruangan_code))
+            .execute()
+            .then((res) => res[0]);
+
         await db.insert(barangs).values({
-            name: String(fields.name),
-            code: String(fields.code),
-            condition: String(fields.condition),
+            name: fields.name,
+            code: fields.code,
             status: fields.status === 'true',
+            condition: fields.condition,
             warranty: warrantyDate,
-            ruanganId: Number(fields.ruanganId),
+            ruanganId: ruangan.id,
             createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })),
             photo: fields.name
         })
@@ -224,12 +248,12 @@ export const route = (instance: typeof server) => instance
             message: "Barang created successfully",
         };
     })
-    .delete("/:id", {
+    .delete("/:code", {
         schema: {
-            description: "Delete a barang by id",
+            description: "Delete a barang by code",
             tags: ["barangs"],
             params: z.object({
-                id: z.string()
+                code: z.string()
             }),
             headers: z.object({
                 authorization: z.string().transform((v) => v.replace("Bearer ", ""))
@@ -243,17 +267,16 @@ export const route = (instance: typeof server) => instance
         },
         preHandler: authorizeUser
     }, async (req) => {
-        const { id } = req.params;
-        const numberId = parseInt(id);
+        const { code } = req.params;
 
-        if (!numberId) {
+        if (!code) {
             return {
                 statusCode: 400,
                 message: "Bad request"
             };
         }
 
-        const barang = await db.select().from(barangs).where(eq(barangs.id, numberId)).execute();
+        const barang = await db.select().from(barangs).where(eq(barangs.code, code)).execute();
 
         if (barang.length === 0) {
             return {
@@ -267,10 +290,71 @@ export const route = (instance: typeof server) => instance
             fs.unlinkSync(photoPath);
         }
 
-        await db.delete(barangs).where(eq(barangs.id, numberId)).execute();
+        await db.delete(barangs).where(eq(barangs.code, code)).execute();
 
         return {
             statusCode: 200,
             message: "Barang deleted successfully"
+        };
+    })
+    .delete("/bulk", {
+        schema: {
+            description: "Delete multiple barangs by code",
+            tags: ["barangs"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: z.object({
+                codes: z.array(z.string())
+            }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        },
+        preHandler: authorizeUser
+    }, async (req) => {
+        const { codes } = req.body;
+
+        if (!codes || codes.length === 0) {
+            return {
+                statusCode: 400,
+                message: "Bad request"
+            };
+        }
+
+        for (const code of codes) {
+            if (!code) {
+                return {
+                    statusCode: 400,
+                    message: "Bad request"
+                };
+            }
+
+            const barangToDelete = await db
+                .select()
+                .from(barangs)
+                .where(eq(barangs.code, code)).execute().then((res) => res[0]);
+
+            if (!barangToDelete) {
+                return {
+                    statusCode: 404,
+                    message: "Not found"
+                };
+            }
+
+            const photoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${barangToDelete.photo}.png`);
+            if (fs.existsSync(photoPath)) {
+                fs.unlinkSync(photoPath);
+            }
+
+            await db.delete(barangs).where(eq(barangs.code, code)).execute();
+        }
+
+        return {
+            statusCode: 200,
+            message: "Barangs deleted successfully"
         };
     })
