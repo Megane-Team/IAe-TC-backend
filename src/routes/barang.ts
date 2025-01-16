@@ -447,6 +447,8 @@ export const route = (instance: typeof server) => instance
             }
         });
 
+        fs.unlinkSync(filePath);
+
         return {
             statusCode: 200,
             message: "Barangs imported successfully"
