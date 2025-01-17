@@ -1,3 +1,4 @@
+import { webUrl } from "@/config.ts";
 import { genericResponse } from "@/constants.ts";
 import { server } from "@/index.ts";
 import { barangs } from "@/models/barangs.ts";
@@ -411,6 +412,27 @@ export const route = (instance: typeof server) => { instance
                     statusCode: 429,
                     message: 'duplicate request'
                 };
+            }
+        }
+
+        const response = await fetch(`${webUrl}/api/peminjaman`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                category,
+                ruanganId,
+                barangId,
+                kendaraanId,
+                user_id: actor.nik,
+            })
+        })
+
+        if (response.status !== 200) {
+            return {
+                message: "bad Request",
+                statusCode: 400,
             }
         }
 

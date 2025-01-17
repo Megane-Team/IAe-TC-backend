@@ -126,7 +126,6 @@ export async function checkItemsStatus() {
 
 async function checkStatus() {
     try {
-        console.log(webUrl)
         const response = await fetch(`${webUrl}/api/checkstatus`, {
             method: 'GET',
         });

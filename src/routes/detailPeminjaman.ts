@@ -16,6 +16,7 @@ import { notifikasis } from "@/models/notifikasis.ts"
 import { users } from "@/models/users.ts"
 import { getMessaging } from "firebase-admin/messaging"
 import { checkItemsStatus } from "@/utils/checkStatus.ts"
+import { webUrl } from "@/config.ts"
 
 export const prefix = '/detailPeminjaman'
 export const route = (instance: typeof server) => { instance
@@ -569,6 +570,29 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
+        const response = await fetch(`${webUrl}/api/detailpeminjaman`, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+            borrowedDate: borrowedDate ? new Date(borrowedDate).toISOString() : null,
+            estimatedTime: estimatedTime ? new Date(estimatedTime).toISOString() : null,
+            objective,
+            destination,
+            passenger,
+            status,
+            'user_id': actor.nik
+            })
+        })
+
+        if (response.status !== 200) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
         await db.insert(detailPeminjamans).values({
             status,
             borrowedDate,
@@ -968,13 +992,13 @@ export const route = (instance: typeof server) => { instance
             message: 'Success'
         }
     })
-    .patch("/approved", {
+    .put("/approved", {
         schema: {
             description: "Update detailPeminjaman to approved",
             tags: ["detailPeminjaman"],
-            // headers: z.object({
-            //     authorization: z.string().transform((v) => v.replace("Bearer ", ""))
-            // }),
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
             body: detailPeminjamanSchema.insert.pick({ id: true }),
             response: {
                 200: genericResponse(200),
@@ -984,14 +1008,14 @@ export const route = (instance: typeof server) => { instance
             }
         }
     }, async (req) => {
-        // const actor = await getUser(req.headers['authorization'], instance)
+        const actor = await getUser(req.headers['authorization'], instance)
 
-        // if (!actor) {
-        //     return {
-        //         message: "Unauthorized",
-        //         statusCode: 401
-        //     }
-        // }
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
 
         const { id } = req.body
 
@@ -1013,11 +1037,11 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        // await db.insert(logs).values({
-        //     userId: actor.id,
-        //     action: `${actor.name} Accepted the loan request`,
-        // createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
-        // }).execute();
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: `${actor.name} Accepted the loan request`,
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+        }).execute();
 
         await db.update(detailPeminjamans)
             .set({
