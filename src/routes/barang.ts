@@ -286,12 +286,12 @@ export const route = (instance: typeof server) => instance
             };
         }
 
+        await db.delete(barangs).where(eq(barangs.code, code)).execute();
+        
         const photoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${barang[0].photo}.png`);
         if (fs.existsSync(photoPath)) {
             fs.unlinkSync(photoPath);
         }
-
-        await db.delete(barangs).where(eq(barangs.code, code)).execute();
 
         return {
             statusCode: 200,
@@ -345,13 +345,13 @@ export const route = (instance: typeof server) => instance
                     message: "Not found"
                 };
             }
+            
+            await db.delete(barangs).where(eq(barangs.code, code)).execute();
 
             const photoPath = path.join(import.meta.dirname, '../public/assets/barang/', `${barangToDelete.photo}.png`);
             if (fs.existsSync(photoPath)) {
                 fs.unlinkSync(photoPath);
             }
-
-            await db.delete(barangs).where(eq(barangs.code, code)).execute();
         }
 
         return {
@@ -401,13 +401,28 @@ export const route = (instance: typeof server) => instance
         await workbook.xlsx.readFile(filePath);
         const worksheet = workbook.getWorksheet(1);
 
-        worksheet?.getImages().forEach((image, index) => {
+        worksheet?.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) {
+                const values = row.values as any[];
+                const [name] = values.slice(1, 2);
+
+                if (name != "nama_barang") {
+                    return {
+                        statusCode: 400,
+                        message: "Bad request"
+                    };
+                }
+            }
+        });
+
+        worksheet?.getImages().forEach((image) => {
+            const rowNumber = image.range.tl.nativeRow + 1; // Get the row number of the image
             const media = workbook.model.media?.find((media: any) => media.index === image.imageId);
             if (!media) {
             throw new Error(`Media with imageId ${image.imageId} not found`);
             }
             const imageBuffer = media.buffer;
-            const imageName = `image${index + 1}.png`;
+            const imageName = `image${rowNumber}.png`;
             const imagePath = path.join(import.meta.dirname, '../public/assets/barang/', imageName);
 
             fs.writeFileSync(imagePath, new Uint8Array(imageBuffer)); // Save the image to the file system
@@ -416,7 +431,7 @@ export const route = (instance: typeof server) => instance
         worksheet?.eachRow(async (row, rowNumber) => {
             if (rowNumber > 1) {
                 const values = row.values as any[];
-                const [name, code, condition, status, warranty, ruangan_code] = values.slice(1, 7);
+                const [name, code, status, condition, warranty, ruangan_code] = values.slice(1, 7);
 
                 if (name && code && condition && status && warranty && ruangan_code) {
                     const newPhotoName = `${name}.png`;
@@ -440,7 +455,7 @@ export const route = (instance: typeof server) => instance
                         photo: name
                     }).execute();
 
-                    const imageName = `image${rowNumber - 1}.png`;
+                    const imageName = `image${rowNumber}.png`;
                                         
                     fs.renameSync(path.join(import.meta.dirname, '../public/assets/barang/', imageName), photoPath);
                 }

@@ -39,7 +39,7 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
 
         // check if file exists
-        const path = join(import.meta.dirname, `../public/assets/tempat/${id}.jpg`)
+        const path = join(import.meta.dirname, `../public/assets/tempat/${id}.png`)
 
         if (!fs.existsSync(path)) {
             return {
@@ -48,7 +48,7 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        return reply.sendFile(`./tempat/${id}.jpg`)
+        return reply.sendFile(`./tempat/${id}.png`)
     })
     .get('/ruangan/:id', {
         schema: {
@@ -82,7 +82,7 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
 
         // check if file exists
-        const path = join(import.meta.dirname, `../public/assets/ruangan/${id}.jpg`)
+        const path = join(import.meta.dirname, `../public/assets/ruangan/${id}.png`)
 
         if (!fs.existsSync(path)) {
             return {
@@ -91,7 +91,7 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        return reply.sendFile(`./ruangan/${id}.jpg`)
+        return reply.sendFile(`./ruangan/${id}.png`)
     })
     .get('/barang/:id', {
         schema: {
@@ -125,7 +125,7 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
 
         // check if file exists
-        const path = join(import.meta.dirname, `../public/assets/barang/${id}.jpg`)
+        const path = join(import.meta.dirname, `../public/assets/barang/${id}.png`)
 
         if (!fs.existsSync(path)) {
             return {
@@ -134,7 +134,7 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        return reply.sendFile(`./barang/${id}.jpg`)
+        return reply.sendFile(`./barang/${id}.png`)
     })
     .get('/kendaraan/:id', {
         schema: {
@@ -168,7 +168,7 @@ export const route = (instance: typeof server) => { instance
         const { id } = req.params;
 
         // check if file exists
-        const path = join(import.meta.dirname, `../public/assets/kendaraan/${id}.jpg`)
+        const path = join(import.meta.dirname, `../public/assets/kendaraan/${id}.png`)
         
         if (!fs.existsSync(path)) {
             return {
@@ -177,7 +177,7 @@ export const route = (instance: typeof server) => { instance
             }
         }
 
-        return reply.sendFile(`./kendaraan/${id}.jpg`)
+        return reply.sendFile(`./kendaraan/${id}.png`)
     })
 
 }

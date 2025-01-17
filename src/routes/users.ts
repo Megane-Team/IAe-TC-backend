@@ -390,6 +390,14 @@ export const route = (instance: typeof server) => { instance
                 };
             }
 
+            await db
+                .delete(logs)
+                .where(eq(logs.userId, userToDelete.id)).execute();
+
+            await db
+                .delete(perangkats)
+                .where(eq(perangkats.userId, userToDelete.id)).execute();
+
             const photoPath = path.join(import.meta.dirname, '../public/assets/user/', `${userToDelete.photo}.png`);
             if (fs.existsSync(photoPath)) {
                 fs.unlinkSync(photoPath);
