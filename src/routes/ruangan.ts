@@ -420,6 +420,8 @@ export const route = (instance: typeof server) => { instance
                 const [name] = values.slice(1, 2);
 
                 if (name != "kode_ruangan") {
+                    fs.unlinkSync(filePath);
+
                     return {
                         statusCode: 400,
                         message: "Bad request"
