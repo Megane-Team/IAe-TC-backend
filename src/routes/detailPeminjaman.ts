@@ -1101,4 +1101,114 @@ export const route = (instance: typeof server) => { instance
             message: "Success",
         }
     })
+    .put('/rejected', {
+        schema: {
+            description: "Update detailPeminjaman to rejected",
+            tags: ["detailPeminjaman"],
+            headers: z.object({
+                authorization: z.string().transform((v) => v.replace("Bearer ", ""))
+            }),
+            body: detailPeminjamanSchema.insert.pick({ id: true, canceledReason: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+                401: genericResponse(401),
+                404: genericResponse(404)
+            }
+        }
+    }, async (req) => {
+        const actor = await getUser(req.headers['authorization'], instance)
+
+        if (!actor) {
+            return {
+                message: "Unauthorized",
+                statusCode: 401
+            }
+        }
+
+        const { id, canceledReason } = req.body
+
+        if (!id) {
+            return {
+                message: "Bad request",
+                statusCode: 400
+            }
+        }
+
+        const dp = await db.select()
+            .from(detailPeminjamans)
+            .where(eq(detailPeminjamans.id, id))
+
+        if (dp.length === 0) {
+            return {
+                message: "detailPeminjaman Not found",
+                statusCode: 404
+            }
+        }
+
+        await db.insert(logs).values({
+            userId: actor.id,
+            action: `${actor.name} Rejected the loan request`,
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+        }).execute();
+
+        await db.update(detailPeminjamans)
+            .set({
+                status: 'rejected',
+                canceledReason
+            })
+            .where(eq(detailPeminjamans.id, id))
+            .execute()
+
+        var devicesToken = await db
+            .select()
+            .from(perangkats)
+            .where(eq(perangkats.userId, dp[0].userId))
+
+        if (devicesToken.length === 0) {
+            return {
+                statusCode: 404,
+                message: "Not found"
+            };
+        }
+
+        let notificationInserted = false;
+
+        for (const device of devicesToken) {
+            const messages = {
+            notification: {
+                title: getNotificationTitleMessage('PDT'),
+                body: getNotificationMessage('PDT')
+            },
+            token: device.deviceToken
+            };
+
+            if (!notificationInserted) {
+                await db.insert(notifikasis)
+                    .values({
+                    userId: dp[0].userId,
+                    category: 'PDT',
+                    detailPeminjamanId: id,
+                    isRead: false,
+                    createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+                    })
+                    .execute();
+                notificationInserted = true;
+            }
+
+            getMessaging()
+                .send(messages)
+                .then((response) => {
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
+        }
+
+        return {
+            statusCode: 200,
+            message: "Success",
+        }
+    })
 }
