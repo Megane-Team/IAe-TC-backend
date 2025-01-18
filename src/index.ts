@@ -36,12 +36,32 @@ server.register(fastifyMultipart)
 
 try {
     server.log.warn("Migrating database...");
-    const migrationClient = new pg.Client({ connectionString: databaseUrl });
-    await migrationClient.connect();
-    await migrate(drizzle(migrationClient, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
-    server.log.warn("Database migrated successfully");
+    // Check if the database exists, if not create it
+    if (!databaseUrl) {
+        throw new Error("Database URL is not defined");
+    }
+    const dbName = new URL(databaseUrl).pathname.slice(1);
+    const client = new pg.Client({ connectionString: databaseUrl.replace(`/${dbName}`, "/postgres") });
+    await client.connect();
+    const res = await client.query(`SELECT 1 FROM pg_database WHERE datname='${dbName}'`);
+    if (res.rowCount === 0) {
+        server.log.warn(`Database ${dbName} does not exist. Do you want to create it? (yes/no)`);
+        const userResponse = await new Promise((resolve) => {
+            process.stdin.once('data', (data) => resolve(data.toString().trim().toLowerCase()));
+        });
+
+        if (userResponse === 'yes' || userResponse === 'y' || userResponse === 'YES' || userResponse === 'Y') {
+            await client.query(`CREATE DATABASE "${dbName}"`);
+            server.log.warn(`Database ${dbName} created successfully`);
+        } else {
+            throw new Error(`User denied permission to create database ${dbName}`);
+        }
+    }
     
-    await migrationClient.end();
+    await migrate(drizzle(client, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
+    server.log.warn("Database migrated successfully");
+
+    await client.end();
 }
 catch (error) {
     server.log.error(error, "Failed to migrate database");
