@@ -90,6 +90,38 @@ export const route = (instance: typeof server) => { instance
             data: user[0]
         };
     })
+    .post("/default", {
+        schema: {
+            description: "Create a default user",
+            tags: ["users"],
+            body: userSchema.select.pick({ name: true, email: true, password: true, role: true, nik: true }),
+            response: {
+                200: genericResponse(200),
+                400: genericResponse(400),
+            }
+        }
+    }, async (req) => {
+        const { name, email, role, nik, password } = req.body;
+
+        const hashedPassword = await argon2.hash(password);
+
+        await db.insert(users).values({
+            name,
+            email,
+            role,
+            nik,
+            password: hashedPassword,
+            unit: "IT",
+            address: "Jl. Jalan",
+            phoneNumber: "08123456789",
+            createdAt: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }))
+        }).execute();
+
+        return {
+            statusCode: 200,
+            message: "User created successfully"
+        };
+    })
     .post("/login", {
         schema: {
             description: "Login user",

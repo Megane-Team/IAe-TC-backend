@@ -57,11 +57,14 @@ try {
             throw new Error(`User denied permission to create database ${dbName}`);
         }
     }
+    await client.end();
     
-    await migrate(drizzle(client, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
+    const clientMigrations = new pg.Client({ connectionString: databaseUrl });
+    await clientMigrations.connect();
+    await migrate(drizzle(clientMigrations, { casing: "snake_case" }), { migrationsFolder: `${process.cwd()}/drizzle` });
     server.log.warn("Database migrated successfully");
 
-    await client.end();
+    await clientMigrations.end();
 }
 catch (error) {
     server.log.error(error, "Failed to migrate database");
